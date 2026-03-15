@@ -16,7 +16,15 @@ activate (GtkApplication *app,
 
   window = gtk_application_window_new (app);
   gtk_window_set_title (GTK_WINDOW (window), "Hello");
-  gtk_window_set_default_size (GTK_WINDOW (window), 600, 200);
+  #ifdef __arm__
+        // Si on est sur Raspberry Pi (Architecture ARM)
+        gtk_window_fullscreen(GTK_WINDOW(window));
+        // On peut aussi cacher le curseur si c'est un écran tactile
+        gtk_widget_set_cursor_from_name(window, "none"); 
+    #else
+        // Si on est sur PC (Windows/Autre)
+        gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
+    #endif
 
   button = gtk_button_new_with_label ("Hello World");
   gtk_widget_set_halign(button, GTK_ALIGN_CENTER);
