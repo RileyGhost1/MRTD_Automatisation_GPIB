@@ -1,7 +1,11 @@
 #include <gtk/gtk.h>
 
+
+static GtkWidget *label_temp;
+static GtkWidget *label_target;
+
 /*
- * Callback function for the increment temperature button
+ * Callback function for the "clicked" signal of the buttons. For now, it just prints a message to the console.
  */
 static void
 on_inc_temp_clicked(GtkWidget *widget, gpointer user_data)
@@ -28,6 +32,7 @@ static void
 activate (GtkApplication *app, gpointer user_data)
 {
     GtkWidget *window;
+    GtkWidget *main_box;
     GtkWidget *box_temp;
     GtkWidget *box_target;
     GtkWidget *btn_inc;
@@ -40,7 +45,7 @@ activate (GtkApplication *app, gpointer user_data)
 #ifdef __arm__
     gtk_window_fullscreen(GTK_WINDOW(window));
 #else
-    gtk_window_set_default_size (GTK_WINDOW (window), 800, 600);
+    gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
 #endif
 
     /* Appliquer le style CSS */
@@ -52,21 +57,39 @@ activate (GtkApplication *app, gpointer user_data)
         GTK_STYLE_PROVIDER_PRIORITY_USER);
     g_object_unref(provider);
 
+    /* main_box  horizontale */
+    main_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 40);
+    gtk_widget_set_halign(main_box, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(main_box, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand(main_box, TRUE);
+    gtk_widget_set_vexpand(main_box, TRUE);
+
     /* box_temp */
     box_temp = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
     gtk_widget_set_halign(box_temp, GTK_ALIGN_START);
     gtk_widget_set_margin_start(box_temp, 40);
     gtk_widget_set_valign(box_temp, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand(box_temp, TRUE);
+    gtk_widget_set_vexpand(box_temp, TRUE);
+    
 
     /* box_target */
     box_target = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
     gtk_widget_set_halign(box_target, GTK_ALIGN_END);
-    gtk_widget_set_margin_start(box_target, 40);
+    gtk_widget_set_margin_end(box_target, 40);
     gtk_widget_set_valign(box_target, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand(box_target, TRUE);
+    gtk_widget_set_vexpand(box_target, TRUE);
+
+    /* label */
+    label_temp = gtk_label_new("Temp: --.- °C");
+    label_target = gtk_label_new("Target: --");
 
     /* bouton + */
     btn_inc = gtk_button_new_with_label(" + Temp ");
     gtk_widget_add_css_class(btn_inc, "big");
+    gtk_widget_set_hexpand(btn_inc, TRUE);
+    gtk_widget_set_vexpand(btn_inc, TRUE);
     g_signal_connect(btn_inc, "clicked",
                      G_CALLBACK(on_inc_temp_clicked), NULL);
 
@@ -82,15 +105,23 @@ activate (GtkApplication *app, gpointer user_data)
     g_signal_connect(btn_target, "clicked",
                      G_CALLBACK(on_target_temp_clicked), NULL);
 
+
+    gtk_box_append(GTK_BOX(box_temp), label_temp);
     gtk_box_append(GTK_BOX(box_temp), btn_inc);
     gtk_box_append(GTK_BOX(box_temp), btn_dec);
+
+    gtk_box_append(GTK_BOX(box_target), label_target);
     gtk_box_append(GTK_BOX(box_target), btn_target);
 
-    gtk_window_set_child(GTK_WINDOW(window), box_temp);
-    gtk_window_set_child(GTK_WINDOW(window), box_target);
+    gtk_box_append(GTK_BOX(main_box), box_temp);
+    gtk_box_append(GTK_BOX(main_box), box_target);
+    gtk_window_set_child(GTK_WINDOW(window), main_box);
+
     gtk_window_present(GTK_WINDOW(window));
 }
 
+
+/* Public function to run the UI */
 int ui_run(int argc, char **argv)
 {
   GtkApplication *app;
