@@ -1,5 +1,4 @@
 #include <gpib/ib.h>
-#include "gpib_linux_write.h"
 
 static float current_temp   = 20.0f;
 static int   current_target = 1;

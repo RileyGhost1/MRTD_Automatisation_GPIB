@@ -1,6 +1,5 @@
 #include <gpib/ib.h>
 
-
 static int gpib_dev = -1;
 
 /*

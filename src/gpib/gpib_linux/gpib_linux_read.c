@@ -1,2 +1,0 @@
-#include <gpib/ib.h>
-
