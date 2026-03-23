@@ -1,9 +1,18 @@
 #include <gtk/gtk.h>
 #include "ui.h"
+#include "gpib.h"
 
-void on_inc_temp_clicked(GtkButton *btn, gpointer data) {}
-void on_dec_temp_clicked(GtkButton *btn, gpointer data) {}
-void on_next_target_clicked(GtkButton *btn, gpointer data) {}
+void on_inc_temp_clicked(GtkButton *btn, gpointer data) {
+    gpib_temp_inc();
+}
+
+void on_dec_temp_clicked(GtkButton *btn, gpointer data) {
+    gpib_temp_dec();
+}
+
+void on_next_target_clicked(GtkButton *btn, gpointer data) {
+    gpib_next_target();
+}
 
 int hmi_init(int *argc, char ***argv) {
     GtkBuilder *builder;

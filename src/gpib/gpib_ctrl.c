@@ -30,19 +30,15 @@ int gpib_close()
 Private function to check GPIB status before each action
 */
 int gpib_check_status(const char *context) {
+    
     if (ibsta & ERR) {
-        fprintf(stderr, "[GPIB][%s] iberr=%d ", context, iberr);
-        if (iberr == ENOL)  fprintf(stderr, "(No Listener)\n");
-        if (iberr == EABO)  fprintf(stderr, "(Operation aborted)\n");
-        if (iberr == ENEB)  fprintf(stderr, "(No GPIB board)\n");
-        #if defined(ETMO)
-         if (iberr == ETMO)  fprintf(stderr, "(Timeout)\n");
-        #elif defined(ETIME)
-         if (iberr == ETIME) fprintf(stderr, "(Timeout)\n");
-        #endif
-            else                fprintf(stderr, "(Unknown error)\n");
-        ibclr(gpib_dev);
-        return -1;
+        switch (iberr) {
+            case EABO:  fprintf(stderr, "Timeout GPIB\n"); break;
+            case ENOL:  fprintf(stderr, "Pas de listener sur le bus\n"); break;
+            case ENEB:  fprintf(stderr, "Interface GPIB absente\n"); break;
+            case EARG:  fprintf(stderr, "Argument invalide\n"); break;
+            default:    fprintf(stderr, "Erreur GPIB code: %d\n", iberr); break;
+        }
     }
     return 0;
 }
