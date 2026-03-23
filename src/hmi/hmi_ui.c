@@ -14,24 +14,56 @@ void on_next_target_clicked(GtkButton *btn, gpointer data) {
     gpib_next_target();
 }
 
-int hmi_init(int *argc, char ***argv) {
+void on_read_device_clicked(GtkButton *btn, gpointer data) {
+    AppContext *ctx = (AppContext *)data;
+    char buf[32];
+
+    gpib_read_all(ctx);
+
+    snprintf(buf, sizeof(buf), "%.2f °C", ctx->target_temp);
+    gtk_label_set_text(GTK_LABEL(ctx->label_tgt_temp), buf);
+
+    snprintf(buf, sizeof(buf), "%d", ctx->current_target);
+    gtk_label_set_text(GTK_LABEL(ctx->label_target), buf);
+}
+
+void on_connect_device_clicked(GtkButton *btn, gpointer data) {
+    
+    AppContext *ctx = (AppContext *)data;
+    gtk_label_set_text(GTK_LABEL(ctx->label_status), "CONNECTION ATTEMPT...");
+
+    if (gpib_init(1) == 0) {
+        gtk_label_set_text(GTK_LABEL(ctx->label_status), "ONLINE");
+    } else {
+        gtk_label_set_text(GTK_LABEL(ctx->label_status), "CONNECTION FAILED");
+    }
+}
+
+int hmi_init(int *argc, char ***argv, AppContext *ctx) {
     GtkBuilder *builder;
     GtkWidget  *window;
-    GtkWidget  *btn_inc, *btn_dec, *btn_next;
+    GtkWidget  *btn_inc, *btn_dec, *btn_next, *btn_read, *btn_connect;  
 
     gtk_init(argc, argv);
 
-    builder = gtk_builder_new_from_file(GLADE_PATH);
-
+    builder  = gtk_builder_new_from_file(GLADE_PATH);
     window   = GTK_WIDGET(gtk_builder_get_object(builder, "hWindows"));
     btn_inc  = GTK_WIDGET(gtk_builder_get_object(builder, "ButtonIncrease"));
     btn_dec  = GTK_WIDGET(gtk_builder_get_object(builder, "ButtonDecrease"));
     btn_next = GTK_WIDGET(gtk_builder_get_object(builder, "ButtonNextTgt"));
+    btn_read = GTK_WIDGET(gtk_builder_get_object(builder, "ButtonRead"));
+    btn_connect = GTK_WIDGET(gtk_builder_get_object(builder, "ButtonConnect"));
+    ctx->label_status   = GTK_WIDGET(gtk_builder_get_object(builder, "LabelDeviceStatus"));
+    ctx->label_tgt_temp = GTK_WIDGET(gtk_builder_get_object(builder, "LabelTgtTemp"));
+    ctx->label_target   = GTK_WIDGET(gtk_builder_get_object(builder, "LabelTarget"));
+
 
     g_signal_connect(window,   "destroy", G_CALLBACK(gtk_main_quit),          NULL);
     g_signal_connect(btn_inc,  "clicked", G_CALLBACK(on_inc_temp_clicked),    NULL);
     g_signal_connect(btn_dec,  "clicked", G_CALLBACK(on_dec_temp_clicked),    NULL);
     g_signal_connect(btn_next, "clicked", G_CALLBACK(on_next_target_clicked), NULL);
+    g_signal_connect(btn_read, "clicked", G_CALLBACK(on_read_device_clicked), ctx);
+    g_signal_connect(btn_connect, "clicked", G_CALLBACK(on_connect_device_clicked), ctx);
 
     gtk_widget_show_all(window);
     g_object_unref(builder);
