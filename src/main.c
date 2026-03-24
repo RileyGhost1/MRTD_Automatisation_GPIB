@@ -7,9 +7,8 @@
 
 int main(int argc, char **argv)
 {
-    AppContext ctx = {0};
 
-    if (hmi_init(&argc, &argv, &ctx) < 0) {
+    if (hmi_init(&argc, &argv) < 0) {
         fprintf(stderr, "Failed to run UI\n");
         return EXIT_FAILURE;
     }

@@ -12,7 +12,7 @@ int gpib_init(int Device_Addr)
 {
     gpib_dev = ibdev(0, Device_Addr, 0, T3s, 1, 0); // board index, Device Primary address, secondary address, timeout, EOI mode, EOS mode
     
-    if (gpib_dev != 0) {
+    if (gpib_dev < 0) {
         fprintf(stderr, "Failed to initialize GPIB\n");
         return EXIT_FAILURE;
     } else {

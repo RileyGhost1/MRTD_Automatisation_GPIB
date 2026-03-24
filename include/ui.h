@@ -2,6 +2,6 @@
 #define UI_H
 #include "gpib.h"
 
-int hmi_init(int *argc, char ***argv, AppContext *ctx);
+int hmi_init(int *argc, char ***argv);
 
 #endif
