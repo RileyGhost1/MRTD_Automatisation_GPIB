@@ -1,6 +1,8 @@
 #include <gtk/gtk.h>
 #include "ui.h"
 #include "gpib.h"
+#define master_addr 0
+#define dev_addr 1
 
 void on_inc_temp_clicked(GtkButton *btn, gpointer data) {
     gpib_temp_inc();
@@ -15,11 +17,12 @@ void on_next_target_clicked(GtkButton *btn, gpointer data) {
 }
 
 void on_read_device_clicked(GtkButton *btn, gpointer data) {
+    gpib_read_all();
 
 }
 
 void on_connect_device_clicked(GtkButton *btn, gpointer data) {
-    
+    gpib_init(master_addr,dev_addr);
 
 }
 

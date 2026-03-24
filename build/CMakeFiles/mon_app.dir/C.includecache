@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_ctrl.c
+stdlib.h
+-
+stdio.h
+-
+gpib/ib.h
+-
+string.h
+-
+ctype.h
+-
+errno.h
+-
+unistd.h
+-
+
