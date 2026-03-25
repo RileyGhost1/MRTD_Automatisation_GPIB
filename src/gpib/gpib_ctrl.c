@@ -41,7 +41,7 @@ int gpib_init(int master_addr, int dev_addr)
 		// Ajouter fonction de déconnection et màj du status du device 
 	}
 
-    printf("Device connected successfully !\n");
+    printf("Device connected successfully !\n"); // le device montré comme online alors qu'il ne l'est pas // A CORRIGER //
     g_controller.connected = TRUE;
 
 	return 0;

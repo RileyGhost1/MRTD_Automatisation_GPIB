@@ -1,6 +1,5 @@
 file(REMOVE_RECURSE
   "CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.o"
-  "CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o"
   "CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o"
   "CMakeFiles/mon_app.dir/src/hmi/hmi_ui.c.o"
   "CMakeFiles/mon_app.dir/src/main.c.o"

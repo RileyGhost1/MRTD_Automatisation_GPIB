@@ -643,8 +643,7 @@ CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.o: /usr/include/pango-1.0/pango/pang
 CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.o: /usr/include/pango-1.0/pango/pangocairo.h
 CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.o: /usr/lib/aarch64-linux-gnu/glib-2.0/include/glibconfig.h
 
-CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o: ../src/gpib/gpib_read.c
-
+CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o: ../include/gpib.h
 CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o: ../src/gpib/gpib_write.c
 CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o: /usr/include/atk-1.0/atk/atk-enum-types.h
 CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o: /usr/include/atk-1.0/atk/atk.h

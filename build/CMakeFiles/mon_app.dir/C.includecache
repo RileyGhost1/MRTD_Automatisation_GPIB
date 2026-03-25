@@ -12,17 +12,13 @@ gtk/gtk.h
 pthread.h
 -
 
-../include/ui.h
-gpib.h
-../include/gpib.h
-
-/home/pi/project/application/MRTD_Automatisation_GPIB/src/hmi/hmi_ui.c
+/home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_write.c
+gpib/ib.h
+-
 gtk/gtk.h
 -
-ui.h
-/home/pi/project/application/MRTD_Automatisation_GPIB/src/hmi/ui.h
 gpib.h
-/home/pi/project/application/MRTD_Automatisation_GPIB/src/hmi/gpib.h
+/home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib.h
 
 /usr/include/atk-1.0/atk/atk-enum-types.h
 atk/atkversion.h

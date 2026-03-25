@@ -7,10 +7,12 @@
 void *gpib_poll_thread(void *arg);
 int gpib_init(int master_addr, int dev_addr);
 int gpib_close(void);
-float gpib_temp_inc(void);
-float gpib_temp_dec(void);
-int   gpib_next_target(void);
+int gpib_temp_inc(void);
+int gpib_temp_dec(void);
+int gpib_next_target(void);
 int gpib_read_all(void);
+int gpib_write(const char *command);
+int gpib_read(char *response);
 
 typedef struct {
     double target_temp;

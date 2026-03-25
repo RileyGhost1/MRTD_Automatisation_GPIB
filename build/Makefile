@@ -169,33 +169,6 @@ src/gpib/gpib_ctrl.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mon_app.dir/build.make CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.s
 .PHONY : src/gpib/gpib_ctrl.c.s
 
-src/gpib/gpib_read.o: src/gpib/gpib_read.c.o
-
-.PHONY : src/gpib/gpib_read.o
-
-# target to build an object file
-src/gpib/gpib_read.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mon_app.dir/build.make CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o
-.PHONY : src/gpib/gpib_read.c.o
-
-src/gpib/gpib_read.i: src/gpib/gpib_read.c.i
-
-.PHONY : src/gpib/gpib_read.i
-
-# target to preprocess a source file
-src/gpib/gpib_read.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mon_app.dir/build.make CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.i
-.PHONY : src/gpib/gpib_read.c.i
-
-src/gpib/gpib_read.s: src/gpib/gpib_read.c.s
-
-.PHONY : src/gpib/gpib_read.s
-
-# target to generate assembly for a file
-src/gpib/gpib_read.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/mon_app.dir/build.make CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.s
-.PHONY : src/gpib/gpib_read.c.s
-
 src/gpib/gpib_write.o: src/gpib/gpib_write.c.o
 
 .PHONY : src/gpib/gpib_write.o
@@ -316,9 +289,6 @@ help:
 	@echo "... src/gpib/gpib_ctrl.o"
 	@echo "... src/gpib/gpib_ctrl.i"
 	@echo "... src/gpib/gpib_ctrl.s"
-	@echo "... src/gpib/gpib_read.o"
-	@echo "... src/gpib/gpib_read.i"
-	@echo "... src/gpib/gpib_read.s"
 	@echo "... src/gpib/gpib_write.o"
 	@echo "... src/gpib/gpib_write.i"
 	@echo "... src/gpib/gpib_write.s"

@@ -115,22 +115,9 @@ CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.s"
 	/usr/bin/aarch64-linux-gnu-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_ctrl.c -o CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.s
 
-CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o: CMakeFiles/mon_app.dir/flags.make
-CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o: ../src/gpib/gpib_read.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o"
-	/usr/bin/aarch64-linux-gnu-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o -c /home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_read.c
-
-CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.i"
-	/usr/bin/aarch64-linux-gnu-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_read.c > CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.i
-
-CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.s"
-	/usr/bin/aarch64-linux-gnu-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_read.c -o CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.s
-
 CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o: CMakeFiles/mon_app.dir/flags.make
 CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o: ../src/gpib/gpib_write.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o"
 	/usr/bin/aarch64-linux-gnu-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o -c /home/pi/project/application/MRTD_Automatisation_GPIB/src/gpib/gpib_write.c
 
 CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.i: cmake_force
@@ -143,7 +130,7 @@ CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.s: cmake_force
 
 CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o: CMakeFiles/mon_app.dir/flags.make
 CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o: ../src/vision/vision_mrtd.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o"
 	/usr/bin/aarch64-linux-gnu-gcc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o -c /home/pi/project/application/MRTD_Automatisation_GPIB/src/vision/vision_mrtd.c
 
 CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.i: cmake_force
@@ -159,7 +146,6 @@ mon_app_OBJECTS = \
 "CMakeFiles/mon_app.dir/src/main.c.o" \
 "CMakeFiles/mon_app.dir/src/hmi/hmi_ui.c.o" \
 "CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.o" \
-"CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o" \
 "CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o" \
 "CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o"
 
@@ -169,7 +155,6 @@ mon_app_EXTERNAL_OBJECTS =
 mon_app: CMakeFiles/mon_app.dir/src/main.c.o
 mon_app: CMakeFiles/mon_app.dir/src/hmi/hmi_ui.c.o
 mon_app: CMakeFiles/mon_app.dir/src/gpib/gpib_ctrl.c.o
-mon_app: CMakeFiles/mon_app.dir/src/gpib/gpib_read.c.o
 mon_app: CMakeFiles/mon_app.dir/src/gpib/gpib_write.c.o
 mon_app: CMakeFiles/mon_app.dir/src/vision/vision_mrtd.c.o
 mon_app: CMakeFiles/mon_app.dir/build.make
@@ -187,7 +172,7 @@ mon_app: /usr/lib/aarch64-linux-gnu/libgobject-2.0.so
 mon_app: /usr/lib/aarch64-linux-gnu/libgmodule-2.0.so
 mon_app: /usr/lib/aarch64-linux-gnu/libglib-2.0.so
 mon_app: CMakeFiles/mon_app.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking C executable mon_app"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking C executable mon_app"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/mon_app.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

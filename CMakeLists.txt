@@ -17,7 +17,6 @@ set(SOURCES_COMMON
 if(UNIX)
     set(SOURCES_PLATFORM
         src/gpib/gpib_ctrl.c
-        src/gpib/gpib_read.c
         src/gpib/gpib_write.c
         src/vision/vision_mrtd.c
     )
