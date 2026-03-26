@@ -1,3 +1,0 @@
-/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles/rebuild_cache.dir
-/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles/edit_cache.dir
-/home/pi/project/application/MRTD_Automatisation_GPIB/build/CMakeFiles/mon_app.dir
