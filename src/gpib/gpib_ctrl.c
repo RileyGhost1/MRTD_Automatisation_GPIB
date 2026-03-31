@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <unistd.h> 
 #include "gpib.h"
+#include "core.h"
 
 #define GPIB_BUFFER_SIZE 256
 
@@ -149,26 +150,6 @@ int gpib_read_all()
     // Ajouter lecture utile ici
     
     return 0;
-}
-
-void *gpib_poll_thread(void *arg)
-{
-    (void)arg;
-
-    while(1)
-    {
-        while (g_controller.state == MASTER_ONLINE_DEVICE_ONLINE)
-        {
-            if (gpib_read_all() < 0) {
-                fprintf(stderr, "Error reading from GPIB device in polling thread\n");
-                g_controller.state = MASTER_OFFLINE_DEVICE_OFFLINE;
-            }
-            sleep(1);
-        }     
-        sleep(1);
-    }
-
-    return NULL;
 }
 
 void cleanup_and_quit(void)

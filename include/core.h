@@ -15,10 +15,13 @@ typedef struct
     ProgramMode current_mode;
     int shutdown_requested;
 
+    pthread_t thread_auto;
     pthread_t thread_manual;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
 } AppData;
+
+extern AppData g_appdata;
 
 int hmi_init(int *argc, char ***argv);
 

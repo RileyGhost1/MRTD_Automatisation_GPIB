@@ -111,6 +111,26 @@ void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
     (void)button;
     (void)user_data;
 
+    if (pthread_mutex_lock(&g_appdata.mutex) != 0)
+    {
+        fprintf(stderr, "Mutex couldn't be grabbed by GTK thread\n"
+                        "pthread_mutex_lock() returned: %s\n", strerror(errno));
+        hmi_log_append("Action ignored: mutex can't be grabbed");
+        return;
+    }
+
+    /* Garde : on ne peut passer en MANUAL que depuis IDLE */
+    if (g_appdata.current_mode != IDLE_MENU)
+    {
+        pthread_mutex_unlock(&g_appdata.mutex);
+        hmi_log_append("Action ignored: not in IDLE state");
+        return;
+    }
+
+    g_appdata.current_mode = MANUAL_MODE;
+    pthread_cond_broadcast(&g_appdata.cond);
+    pthread_mutex_unlock(&g_appdata.mutex);
+
     gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page1");
 }
 
@@ -201,6 +221,28 @@ void on_btn_back_menu_clicked(GtkButton *button, gpointer user_data)
     (void)button;
     (void)user_data;
     /* Retour au menu principal (page0) */
+
+        if (pthread_mutex_lock(&g_appdata.mutex) != 0)
+    {
+        fprintf(stderr, "Mutex couldn't be grabbed by MANUAL_MODE thread\n"
+                        "pthread_mutex_lock() returned: %s\n", strerror(errno));
+        hmi_log_append("Action ignored: mutex can't be grabbed");
+        return;
+    }
+
+    /* Garde : on ne peut passer au MENU que depuis le mode manuel */
+    if (g_appdata.current_mode != MANUAL_MODE)
+    {
+        pthread_mutex_unlock(&g_appdata.mutex);
+        hmi_log_append("Action ignored: not in MANUAL state");
+        return;
+    }
+
+    g_appdata.current_mode = IDLE_MENU;
+    pthread_cond_broadcast(&g_appdata.cond);
+    pthread_mutex_unlock(&g_appdata.mutex);
+
+
     gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page0");
 }
 
