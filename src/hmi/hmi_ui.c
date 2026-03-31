@@ -111,13 +111,6 @@ void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
     (void)button;
     (void)user_data;
 
-    AppData *app = (AppData *)user_data;
-
-    pthread_mutex_lock(&app->mutex);
-    app->current_mode = MANUAL_MODE;   /* 1. écrire */
-    pthread_cond_signal(&app->cond);   /* 2. sonner */
-    pthread_mutex_unlock(&app->mutex); /* 3. rendre */
-
     gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page1");
 }
 
