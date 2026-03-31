@@ -10,19 +10,11 @@ add_definitions(-DGLADE_PATH="${CMAKE_SOURCE_DIR}/src/hmi/gui.glade")
 # Sources toujours compilées
 set(SOURCES_COMMON
     src/main.c
+    src/gpib/gpib_ctrl.c
     src/hmi/hmi_ui.c
+    src/thread/thread_manual.c
+    src/vision/vision_mrtd.c
 )
-
-# Sources Linux/RPi uniquement
-if(UNIX)
-    set(SOURCES_PLATFORM
-        src/gpib/gpib_ctrl.c
-        src/gpib/gpib_write.c
-        src/vision/vision_mrtd.c
-    )
-else()
-    set(SOURCES_PLATFORM "")
-endif()
 
 # UN SEUL add_executable
 add_executable(mon_app ${SOURCES_COMMON} ${SOURCES_PLATFORM})

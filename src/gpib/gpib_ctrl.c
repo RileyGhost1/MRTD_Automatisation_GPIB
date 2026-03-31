@@ -10,14 +10,13 @@
 
 #define GPIB_BUFFER_SIZE 256
 
-static int ud = -1;
-
 ControllerState g_controller = {
     .target_temp   = 0.0,
     .emitter_temp  = 0.0,
     .target_index  = 0,
-    .connected     = 0,
-    .last_error    = 0
+    .state         = MASTER_OFFLINE_DEVICE_OFFLINE,
+    .last_error    = 0,
+    .ud            = -1
 };
 
 /*
@@ -25,26 +24,44 @@ Public function to initialize the GPIB device
 */
 int gpib_init(int master_addr, int dev_addr)
 {
-	const int sad = 0;
-	const int send_eoi = 1;
-	const int eos_mode = 0;
-	const int timeout = T1s;
+    const int sad      = 0;
+    const int send_eoi = 1;
+    const int eos_mode = 0;
+    const int timeout  = T1s;
+    char response[GPIB_BUFFER_SIZE];
 
-	printf("trying to open pad = %i on /dev/gpib%i ...\n", dev_addr, master_addr);
-	ud = ibdev(master_addr, dev_addr, sad, timeout, send_eoi, eos_mode);
-	if(ud < 0)
-	{
-		fprintf(stderr, "ibdev error\n");
-        fprintf(stderr, "Failed to initialize GPIB device\n");
-        g_controller.connected = FALSE;
+    printf("Trying to open pad=%i on /dev/gpib%i...\n", dev_addr, master_addr);
+
+    g_controller.ud = ibdev(master_addr, dev_addr, sad, timeout, send_eoi, eos_mode);
+    if (g_controller.ud < 0)
+    {
+        fprintf(stderr, "ibdev failed\n");
+        g_controller.state = MASTER_OFFLINE_DEVICE_OFFLINE;
         return -1;
-		// Ajouter fonction de déconnection et màj du status du device 
-	}
+    }
 
-    printf("Device connected successfully !\n"); // le device montré comme online alors qu'il ne l'est pas // A CORRIGER //
-    g_controller.connected = TRUE;
+    g_controller.state = MASTER_ONLINE_DEVICE_OFFLINE;
 
-	return 0;
+    if (gpib_write_read("RV", response) < 0)
+    {
+        fprintf(stderr, "Device not responding (RV command failed)\n");
+        ibonl(g_controller.ud, 0);
+        g_controller.state = MASTER_ONLINE_DEVICE_OFFLINE;
+        return -1;
+    }
+
+    /* Vérification que la réponse contient "SR80" */
+    if (strstr(response, "SR80") == NULL)
+    {
+        fprintf(stderr, "Unexpected device response: %s\n expected response was SR80", response);
+        ibonl(g_controller.ud, 0);
+        g_controller.state = MASTER_ONLINE_DEVICE_OFFLINE;
+        return -1;
+    }
+
+    printf("Corps noir SR80 confirmé — réponse: %s\n", response);
+    g_controller.state = MASTER_ONLINE_DEVICE_ONLINE;
+    return 0;
 }
 /*======================================================================================================*/
 
@@ -70,7 +87,7 @@ int gpib_write(const char *command)
 {
 
 	printf("sending string: %s\n", command);
-    ibwrt(ud, command, strlen(command));
+    ibwrt(g_controller.ud, command, strlen(command));
 	if((ThreadIbsta() & ERR))
 	{
         fprintf(stderr, "ibwrt error\n");
@@ -83,7 +100,7 @@ int gpib_write(const char *command)
 int gpib_read(char *response)
 {
     memset(response, 0, GPIB_BUFFER_SIZE);
-    ibrd(ud, response, GPIB_BUFFER_SIZE - 1);
+    ibrd(g_controller.ud, response, GPIB_BUFFER_SIZE - 1);
     if (ThreadIbsta() & ERR)
     {
         fprintf(stderr, "ibrd error\n");
@@ -140,11 +157,11 @@ void *gpib_poll_thread(void *arg)
 
     while(1)
     {
-        while (g_controller.connected)
+        while (g_controller.state == MASTER_ONLINE_DEVICE_ONLINE)
         {
             if (gpib_read_all() < 0) {
                 fprintf(stderr, "Error reading from GPIB device in polling thread\n");
-                g_controller.connected = FALSE;
+                g_controller.state = MASTER_OFFLINE_DEVICE_OFFLINE;
             }
             sleep(1);
         }     
@@ -152,4 +169,15 @@ void *gpib_poll_thread(void *arg)
     }
 
     return NULL;
+}
+
+void cleanup_and_quit(void)
+{
+    // Libère le device GPIB si connecté
+    if (g_controller.state == MASTER_ONLINE_DEVICE_ONLINE)
+    {
+        ibonl(g_controller.ud, 0);
+        g_controller.state = MASTER_OFFLINE_DEVICE_OFFLINE;
+    }
+
 }

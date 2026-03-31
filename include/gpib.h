@@ -13,13 +13,24 @@ int gpib_next_target(void);
 int gpib_read_all(void);
 int gpib_write(const char *command);
 int gpib_read(char *response);
+int gpib_write_read(const char *command, char *response);
+void cleanup_and_quit(void);
+void *gpib_manual_mode(void *arg);
+
+typedef enum {
+    MASTER_OFFLINE_DEVICE_OFFLINE = 0,
+    MASTER_ONLINE_DEVICE_OFFLINE,
+    MASTER_ONLINE_DEVICE_ONLINE,
+    DEVICE_ERROR    // réservé pour la phase mesure MRTD
+} DeviceState;
 
 typedef struct {
     double target_temp;
     double emitter_temp;
     int    target_index;
-    int    connected;
     int    last_error;
+    DeviceState state;
+    int    ud;
 } ControllerState;
 
 extern ControllerState g_controller;
