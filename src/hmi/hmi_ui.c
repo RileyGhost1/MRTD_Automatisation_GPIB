@@ -32,6 +32,16 @@ static GtkWidget *btn_reset_data;
 static GtkWidget *btn_undo_last_mesure;
 static GtkWidget *btn_invert_d;
 
+/* ------------------------------------------------------------------ */
+/* !!! GTK N'EST PAS THREAD-SAFE !!! 
+Nous ne pouvons pas appeler les fonction GTK depuis un autre thread, 
+Nous ne pouvons pas non plus faire du polling dans le thread GTK, cela rendrait l'interface non réactive et pourrait causer des blocages.
+Nous ne pouvons pas mettre a jour un label comme gtk_label_set_text() depuis le thread de polling, cela causerait des comportements indéterminés et potentiellement des crashs.
+
+TODO: mettre en place un systeme de queu pour transmettre les actions a executer par le thread gpib. 
+*/
+
+/* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
 /* Timer de mise à jour UI                                            */
@@ -126,7 +136,7 @@ void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
         hmi_log_append("Action ignored: not in IDLE state");
         return;
     }
-
+    g_appdata.gpib_polling  = TRUE;
     g_appdata.current_mode = MANUAL_MODE;
     pthread_cond_broadcast(&g_appdata.cond);
     pthread_mutex_unlock(&g_appdata.mutex);

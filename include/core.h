@@ -13,6 +13,7 @@ typedef enum
 typedef struct
 {
     ProgramMode current_mode;
+    int gpib_polling;
     int shutdown_requested;
 
     pthread_t thread_auto;
@@ -24,5 +25,6 @@ typedef struct
 extern AppData g_appdata;
 
 int hmi_init(int *argc, char ***argv);
+void *thread_gpib_polling(void *arg);
 
 #endif

@@ -1,15 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gpib/ib.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
-#include <unistd.h>
-#include <unistd.h> 
 #include "gpib.h"
 #include "core.h"
 
 #define GPIB_BUFFER_SIZE 256
+
+/* ------------------------------------------------------------------ */
+/* 
+TODO: Il faut que le programme utilise la strucutre local pour stocker les donnees lues du corps noir, idealement le thread devrait utiliser le mutex
+      a un seul endroit pour realiser la transition de donnee local -> global. 
+*/
 
 ControllerState g_controller = {
     .target_temp   = 0.0,
@@ -20,8 +21,28 @@ ControllerState g_controller = {
     .ud            = -1
 };
 
+typedef struct
+{
+    double target_temp;     //Une structure de transition est necessaire pour transmettre les donnees a la structure generale ControllerState,
+    double emitter_temp;    //sans cela a chaque fois que le thread de polling lit les donnes gpib il aura la main constante sur le mutex global
+    int    target_index;    //Ce qui n'est pas acceptable pour la reactivite de l'UI et un danger potentiel pour la stabilité de l'application (risque de deadlock)
+    DeviceState state;
+    int    ud;
+} GpibLocalData;
+
+GpibLocalData local_controller = {
+    .target_temp   = 0.0,
+    .emitter_temp  = 0.0,
+    .target_index  = 0,
+    .state         = MASTER_OFFLINE_DEVICE_OFFLINE,
+    .ud            = -1
+};
+
 /*
-Public function to initialize the GPIB device
+Premiere fonction a appeler avec d'utiliser les API de controle du SR80,
+on fournis en argument l'addresse du master et du device (j'ai choisis de fixer MASTER = 0 et DEVICE = 1),
+La fonction tente d'ouvrir le device, la fonction ibdev ne verifie que si un descripteur usb-gpib est present compatible a la bibliotheque,
+j'ai donc du ajouter une verification supplementaire en envoyant une commande de lecture de la version du SR80.
 */
 int gpib_init(int master_addr, int dev_addr)
 {
@@ -65,25 +86,12 @@ int gpib_init(int master_addr, int dev_addr)
     return 0;
 }
 /*======================================================================================================*/
-
 /*
-Public function to close the GPIB device
+Les commandes doivent etre envoyees en ASCII, on utilisera donc les fonctions ibwrt et ibrd pour communiquer avec le corps noir.
+Les API fournie par Sring.h sont la pour nous aider a construire les commandes et parser les reponses, mais la logique de parsing doit etre implementee manuellement.
+l'API ibwrt et ibrd sont des fonctions bas niveau qui ne font que transmettre les octets, elles ne gèrent pas les terminaisons de ligne ou les conversions de format,
+c'est à nous de nous assurer que les commandes sont correctement formatées et que les réponses sont correctement interprétées.
 */
-int gpib_close()
-{
-
-}
-/*======================================================================================================*/
-
-/*
-Private function to check GPIB status before each action
-*/
-int gpib_check_status(const char *context) {
-
-
-}
-/*======================================================================================================*/
-
 int gpib_write(const char *command)
 {
 
@@ -97,7 +105,9 @@ int gpib_write(const char *command)
 	return 0;
 }
 /*======================================================================================================*/
-
+/*
+Fonction de bas niveau qui permet de lire la reponse brute du corps noir, elle ne fait que remplir le buffer de reponse et verifier les erreurs de lecture.
+*/
 int gpib_read(char *response)
 {
     memset(response, 0, GPIB_BUFFER_SIZE);
@@ -110,7 +120,10 @@ int gpib_read(char *response)
     return 0;   
 }
 /*======================================================================================================*/
-
+/*
+Pour les acitons de lecture il est necessaire d'envoyer une commande pour indiquer au SR80 ce que l'on souhaite lire.
+cette fonction est la pour alleger le code et la logique du polling. 
+*/
 int gpib_write_read(const char *command, char *response)
 {
     if (gpib_write(command) < 0) return -1;
@@ -119,7 +132,8 @@ int gpib_write_read(const char *command, char *response)
 /*======================================================================================================*/
 
 /* 
-Read data from black body controller (asci), parse and store this data in ControllerState structure 
+Fonction utiliser dans le thread de polling, elle utilise gpib_write_read et stock les resultats dans une structure de transition,
+pour ne pas monopoliser le mutex global pendant les lectures gpib, ce qui permet a l'UI de rester réactive et d'éviter les risques de deadlock. 
 */
 int gpib_read_all()
 {
@@ -151,7 +165,10 @@ int gpib_read_all()
     
     return 0;
 }
-
+/*======================================================================================================*/
+/*
+N'est pas ops pour l'instant, doit etre appelee lors de la fermeture du programme.
+*/
 void cleanup_and_quit(void)
 {
     // Libère le device GPIB si connecté
@@ -162,3 +179,4 @@ void cleanup_and_quit(void)
     }
 
 }
+

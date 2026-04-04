@@ -15,7 +15,6 @@ int gpib_write(const char *command);
 int gpib_read(char *response);
 int gpib_write_read(const char *command, char *response);
 void cleanup_and_quit(void);
-void *gpib_manual_mode(void *arg);
 
 typedef enum {
     MASTER_OFFLINE_DEVICE_OFFLINE = 0,
