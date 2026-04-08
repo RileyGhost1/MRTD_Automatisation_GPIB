@@ -20,11 +20,28 @@ en pilotant un corps noir via GPIB et une UI GTK4 sur Raspberry Pi 4.
   - `cmake`, `gcc`, `make`.
   - OpenCV (version X.Y).
 
-## Installation
+## Installation de base
 
-```bash
-git clone https://github.com/<ton-user>/UI_Rasberry.git
-cd UI_Rasberry
-mkdir build && cd build
-cmake ..
-make -j4
+Rasberry OS LITE Bookworm ARM64.
+
+-Activer SSH dans raspi-config
+-Mettre à jour l'os & nettoyer les paquets inutiles
+
+sudo apt update
+sudo apt full-upgrade -y
+sudo apt autoremove -y
+sudo reboot
+
+-Pour inclure VScode dans la toolchain, simplement installé le framework "Remote explorer" sur l'IDE.
+entrée l'ip du rasberry (sudo hostname -I) et le serveur VScode s'installera si la connection est établie.
+
+## Installation des dépendance
+
+Depuis la fenêtre de Remote SSH dans vscode l'on peut aller dans l'onglet extensions et installer sur le rasberry:
+
+- C/C++
+- C/C++ Extension pack
+- C/C++ DevTools
+- Makefile Tools
+- Cmake Tools
+
