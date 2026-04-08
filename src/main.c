@@ -6,7 +6,7 @@
 
 AppData g_appdata = {
     .current_mode       = IDLE_MENU,
-    .gpib_polling       = FALSE,
+    .gpib_service       = FALSE,
     .shutdown_requested = 0,                            //Struture globale qui contient les donnees partagees entre tous les threads, cela implique
     .mutex              = PTHREAD_MUTEX_INITIALIZER,    //qu'un mutex doit etre utilise pour proteger les donnees.
     .cond               = PTHREAD_COND_INITIALIZER,     //une condition est presente pour que les threads puissent attendre sans consommer du CPU inutilement (Wait Overhead)

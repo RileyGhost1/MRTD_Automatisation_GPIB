@@ -11,7 +11,7 @@ add_definitions(-DGLADE_PATH="${CMAKE_SOURCE_DIR}/src/hmi/gui.glade")
 set(SOURCES_COMMON
     src/main.c
     src/gpib_ctrl.c
-    src/hmi_ui.c
+    src/hmi/hmi_ui.c
     src/job_manager.c
     src/vision_mrtd.c
 )
@@ -20,6 +20,8 @@ set(SOURCES_COMMON
 add_executable(mon_app ${SOURCES_COMMON} ${SOURCES_PLATFORM})
 
 target_include_directories(mon_app PRIVATE
+    ${GTK3_INCLUDE_DIRS}
+    ${GMODULE_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
