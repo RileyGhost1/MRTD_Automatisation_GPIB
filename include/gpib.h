@@ -14,6 +14,7 @@
  * @param ud_out      : Pointeur pour récupérer le descripteur d'unité (UD)
  */
 int gpib_init(int master_addr, int dev_addr);
+void gpib_is_temp_ready(int ud, GpibData *out_data);
 
 /**
  * Ferme la connexion GPIB proprement.

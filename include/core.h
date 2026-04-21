@@ -22,22 +22,36 @@ typedef enum
 
 // Structure pour les données brutes du matériel
 typedef struct {
-    int    ud;            // Unit Descriptor GPIB
-    double actual_dt;      // Delta entre target et emitter
-    double target_temp;   // Température cible
-    double emitter_temp;  // Température réelle
-    int    target_index;  // Position de la roue
+    int             ud;             // Unit Descriptor GPIB
+    bool            temp_ready;
+    float           actual_dt;      // Delta entre target et emitter
+    double          target_temp;    // Température cible
+    double          emitter_temp;   // Température réelle
+    int             target_index;   // Position de la roue
 } GpibData;
+
+typedef struct {
+    guint  hold_timer_id;
+    gint   hold_duration;
+    float  temp_set_point;
+    float  direction;
+} BtnTemp;
 
 // Structure de contexte global pour l'application
 typedef struct {
     ServiceGpib     service_gpib;      // Partagé entre thread service et watchdog
     bool            shutdown_requested;
     bool            device_online;
-    pthread_mutex_t mutex;              // Protection des accès [cite: 14, 15]
-    pthread_cond_t  cond;               // Signal de synchronisation [cite: 2, 7]
+    pthread_mutex_t mutex;              // Protection des accès 
+    pthread_cond_t  cond;               // Signal de synchronisation 
     GpibData        device_status;      // Données de mesure
+    BtnTemp         btn_hold;           // Pour logique de bouton d'incrémentation 
+    ProgramMode     mode;               // indique le mode actuel de l'hmi (Non protégé)
+    GAsyncQueue     *gpib_queue;        // Queu de commande threadsafe ui.c -> service.c
 } AppData;
+
+// Dans core.h
+
 
 void app_set_service_gpib(AppData *app, ServiceGpib service);
 gboolean hmi_log_append_idle(gpointer data);

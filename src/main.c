@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <gpib/ib.h>
 #include "core.h"
@@ -14,6 +13,7 @@ AppData g_appdata = {
     .device_online      = FALSE,
     .mutex              = PTHREAD_MUTEX_INITIALIZER,
     .cond               = PTHREAD_COND_INITIALIZER,
+    .gpib_queue         = NULL,
     .device_status      = {
         .ud = -1,
         .actual_dt = 0.0,
@@ -26,6 +26,8 @@ AppData g_appdata = {
 int main(int argc, char **argv)
 {
     pthread_t th_handler, th_service;
+
+    g_appdata.gpib_queue = g_async_queue_new();
 
     printf("Démarrage de l'application GPIB...\n");
 

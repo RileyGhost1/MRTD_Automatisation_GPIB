@@ -7,12 +7,18 @@
 #include "core.h"
 
 #define GPIB_BUFFER_SIZE 256
+#define SR80_TEMP_SET_BIT (1 << 3)
+#define POLLING_LOG 0                   /* 1 = actif, 0 = inactif, modifiable sans risque */
 
 /* --- Fonctions de communication Bas Niveau --- */
 
 int gpib_write(const char *command, int ud) {
     if (ud < 0) return -1;
-    printf("Sending: %s\n", command);
+
+    #if POLLING_LOG
+        printf("Sending: %s\n", command);
+    #endif
+
     ibwrt(ud, command, strlen(command));
     if (ThreadIbsta() & ERR) {
         fprintf(stderr, "ibwrt error\n");
@@ -35,6 +41,22 @@ int gpib_write_read(const char *command, char *response, int ud) {
     if (gpib_write(command, ud) < 0) return -1;
     return gpib_read(response, ud);
 }
+
+void gpib_is_temp_ready(int ud,GpibData *out_data)
+{
+    char    raw    = 0;
+    uint8_t status;
+
+    ibrsp(ud, &raw);
+    status = (uint8_t)raw;
+
+    out_data->temp_ready = (status & SR80_TEMP_SET_BIT) != 0;
+
+    #if POLLING_LOG
+        printf("parsed polling byte: %x\n",status);
+        printf("Temp Ready bit parsed: %d\n",out_data->temp_ready);
+    #endif
+}                                       
 
 /* --- Initialisation --- */
 
@@ -65,7 +87,20 @@ int gpib_init(int master_addr, int dev_addr) {
         return -1;
     }
 
-    printf("SR80 trouvé: %s\n", response); 
+    printf("SR80 trouvé: %s\n", response);
+
+    if (gpib_write("CM2", ud) < 0) {
+        fprintf(stderr, "Échec commande CM2\n");
+        ibonl(ud, 0);
+        return -1;
+    }
+
+    if (gpib_write("ST00.00", ud) < 0) { 
+        fprintf(stderr, "Échec commande ST00.00\n");
+        ibonl(ud, 0);
+        return -1;
+    }
+
     return ud;
 }
 

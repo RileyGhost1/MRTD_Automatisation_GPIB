@@ -4,8 +4,29 @@
 #include "core.h"
 #include "gpib.h"
 
+#define POLLING_DELAY_US 500000 // 500ms de délai entre les polls pour éviter de saturer le CPU et le bus GPIB
+#define WATCHDOG_DELAY_US 1000000 // 1s de délai pour le watchdog, ajustable selon les besoins
+
 /*====================================================================================================*/
 /* Ces fonctions on pour but d'aerer le code, permettent de simplifier la lecture et la logique de la machine d'etat du thread de service */
+
+
+
+// Lis et exécute les commandes disponibles dans la queue, return si queue vide.
+void gpib_cmd_queu(int ud, AppData *app)
+{
+    GAsyncQueue *q = app->gpib_queue;
+    gchar       *cmd;
+
+        while ((cmd = g_async_queue_try_pop(q)) != NULL) {
+            gpib_write(cmd, ud);
+            g_message("Commande envoyée : %s", cmd);
+            g_free(cmd);
+        }
+    //g_message("Aucune commande dans la queue.");
+}
+
+
 
 // Change l'état de connexion et le mode de service en une fois (securise)
 void app_set_connection_status(AppData *app, bool online, ServiceGpib state) {
@@ -98,7 +119,9 @@ void* thread_service_gpib(void* arg) {
                 break;
                                                                                                   
             case COMMUNICATION:
-                    //TODO: fonction de lecture du buffer glib pour voir si une commande n'est pas présente
+                /* Vérification si une commande est présente, si pas de commande dans la queu -> break */        
+                gpib_cmd_queu(local_snapshot.ud, app);
+
                 if(app_is_device_online(app) == false){                                                                 
                     g_idle_add(hmi_log_append_idle, strdup("ERROR: Appareil hors ligne.\nImpossible de lancer le polling.\nRetour en IDLE.")); 
                     app_set_connection_status(app, false, IDLE);
@@ -109,8 +132,9 @@ void* thread_service_gpib(void* arg) {
                 } else {
                     //app_set_connection_status(app, true, COMMUNICATION); //Décommenter si polling constant même dans le menu désiré. 
                     //g_idle_add(hmi_log_append_idle, strdup("INFO: Lecture GPIB OK.")); //POUR test
+                    gpib_is_temp_ready(local_snapshot.ud, &local_snapshot);
                     global_data_transfer(app, &local_snapshot);
-                    usleep(100000);
+                    usleep(POLLING_DELAY_US); // Délai de polling pour éviter de saturer le CPU et le bus GPIB
                 }                                                                                  
                 break;     
 
@@ -137,7 +161,7 @@ void* thread_handler_watchdog(void* arg) {
         bool online = app_is_device_online(app);
 
         if (online) {
-            if (ibsta & (ERR | TIMO)) {
+            if (ThreadIbsta() & (ERR | TIMO)) {
                 // Erreur matérielle détectée
                 app_set_connection_status(app, false, IDLE);
                 g_idle_add(hmi_log_append_idle, strdup("ALERTE: Erreur matérielle détectée.\n"));
@@ -155,7 +179,7 @@ void* thread_handler_watchdog(void* arg) {
             last_known_status = online;
         }
 
-        usleep(1000000);
+        usleep(WATCHDOG_DELAY_US); // Délai de vérification pour éviter de saturer le CPU
     }
 
     app_set_connection_status(app, false, SHUTDOWN);

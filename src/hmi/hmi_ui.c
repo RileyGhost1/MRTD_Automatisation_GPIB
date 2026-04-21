@@ -4,7 +4,7 @@
 
 #define master_addr 0
 #define dev_addr    1
-
+#define INCREMENT_HOLD_DELAY 200 /*Permets d'ajuster la réactivité de l'incrémentation des btn (de)increase */
 
 
 static GtkWidget *stack1;
@@ -15,7 +15,7 @@ static GtkWidget *txtView_manual_log;
 
 static GtkWidget *label_differential_temp;
 static GtkWidget *label_setpoint_ready;
-static GtkWidget *label_mrtd_progress;
+static GtkWidget *label_setpoint_temp;
 static GtkWidget *label_emitter_temp;
 static GtkWidget *label_target_temp;
 static GtkWidget *label_target_index;
@@ -35,6 +35,8 @@ static GtkWidget *btn_reset_data;
 static GtkWidget *btn_undo_last_mesure;
 static GtkWidget *btn_invert_d;
 static GtkWidget *btn_back_menu;
+
+
 ProgramMode mode = MENU;
 /* ------------------------------------------------------------------ */
 /* !!! GTK N'EST PAS THREAD-SAFE !!! 
@@ -104,6 +106,16 @@ gboolean ui_update_labels(gpointer user_data)
     snprintf(buf, sizeof(buf), "Target index :%d/12", snap.target_index);
     gtk_label_set_text(GTK_LABEL(label_target_index), buf);
 
+    /* Temp Ready */
+    if(snap.temp_ready){
+        snprintf(buf, sizeof(buf), "Temp READY");
+        gtk_label_set_text(GTK_LABEL(label_setpoint_ready), buf);
+    } else {
+        snprintf(buf, sizeof(buf), "Temp NOT READY");
+        gtk_label_set_text(GTK_LABEL(label_setpoint_ready), buf);
+    }
+
+
     return TRUE;
 }
 
@@ -167,7 +179,7 @@ gboolean hmi_log_append_idle(gpointer data)
 void on_btn_auto_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
     /* TODO: basculer stack1 vers la page1 en mode AUTO, init séquence auto */
     /* gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page1"); */
 }
@@ -175,7 +187,7 @@ void on_btn_auto_clicked(GtkButton *button, gpointer user_data)
 void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
 
     AppData *app = (AppData *)user_data;
 
@@ -196,14 +208,14 @@ void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
 void on_btn_tgt_table_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
     /* TODO: ouvrir / afficher table des cibles (fenêtre ou autre stack) */
 }
 
 void on_btn_help_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
     /* TODO: afficher fenêtre d'aide / message dialog */
 }
 
@@ -227,7 +239,7 @@ void on_btn_connect_dev_clicked(GtkButton *button, gpointer user_data)
 
 void on_btn_serial_log_toggled(GtkToggleButton *button, gpointer user_data)
 {
-    (void)user_data;
+    
     gboolean active = gtk_toggle_button_get_active(button);
 
     /* TODO: activer/désactiver log série, afficher info dans txtView_menu */
@@ -241,7 +253,7 @@ void on_btn_serial_log_toggled(GtkToggleButton *button, gpointer user_data)
 void on_btn_rst_raspi_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
     
     printf("Redémarrage du système...");
     hmi_log_append("Redémarrage du système...");
@@ -254,11 +266,10 @@ void on_btn_rst_raspi_clicked(GtkButton *button, gpointer user_data)
 void on_btn_shutdown_raspi_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
     
     printf("Extinction du système...");
     hmi_log_append("Extinction du système...");
-    //cleanup_and_quit();
     hmi_log_append("GPIB libéré proprement");
     gtk_main_quit();
     //n'est pas exécuté g_spawn_command_line_async("sudo shutdown now", NULL);
@@ -268,10 +279,15 @@ void on_btn_shutdown_raspi_clicked(GtkButton *button, gpointer user_data)
 /* Callbacks page MRTD / MANUAL (page1)                               */
 /* ------------------------------------------------------------------ */
 
+void on_GtkComboBoxText_profile_changed(GtkComboBox *combo, gpointer user_data)
+{
+    
+}
+
 void on_btn_back_menu_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
+    
     /* Retour au menu principal (page0) */
 
         // RÉCUPÉRATION DU POINTEUR :
@@ -290,34 +306,111 @@ void on_btn_back_menu_clicked(GtkButton *button, gpointer user_data)
     gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page0");
 }
 
-void on_btn_increase_pressed(GtkButton *button, gpointer user_data)
+/*
+* est appelée quand btn_released, envoie la commande pour que setpoint sois màj sur le sr80
+* la commande est transmise au fichier service.c au thread service_gpib pour via une GasyncQueu
+*
+*/
+static void apply_increment(gpointer user_data)
 {
-    (void)button;
-    (void)user_data;
-    /* TODO: commencer incrémentation température (appui long ?) */
-    /* ex: gpib_temp_inc_start(); */
+    AppData     *app = (AppData *)user_data;
+    BtnTemp     *b   = &app->btn_hold;
+    GAsyncQueue *q   = app->gpib_queue;
+
+    // Allouer la chaîne sur le heap directement
+    gchar *cmd = g_strdup_printf("ST%.2f", b->temp_set_point);
+
+    g_async_queue_push(q, cmd);  // push du char*
 }
 
-void on_btn_increase_released(GtkButton *button, gpointer user_data)
+/* ── Timer hold générique (+ ou -) ── */
+static gboolean on_btn_temp_hold(gpointer user_data)
 {
-    (void)button;
-    (void)user_data;
-    /* TODO: arrêter incrémentation température */
-    /* ex: gpib_temp_inc_stop(); */
+    AppData  *app = (AppData *)user_data;
+    BtnTemp  *b   = &app->btn_hold;
+    char      buf[64];
+
+    b->hold_duration += INCREMENT_HOLD_DELAY;
+
+    float step;
+    if      (b->hold_duration < 1000) step = 0.01f;
+    else if (b->hold_duration < 3000) step = 0.1f;
+    else                              step = 0.5f;
+
+    b->temp_set_point += step * b->direction;  // ← +1.0f ou -1.0f
+    
+    printf("[BTN] released after %dms → setpoint %.3f°C\n", b->hold_duration, b->temp_set_point);
+
+    snprintf(buf, sizeof(buf), "Setpoint ΔT = %.3f °C", b->temp_set_point);
+    gtk_label_set_text(GTK_LABEL(label_setpoint_temp), buf);
+
+    return G_SOURCE_CONTINUE;
 }
 
-void on_btn_decrease_temp_pressed(GtkButton *button, gpointer user_data)
+/* ── Logique commune pressed ── */
+static void btn_temp_pressed(AppData *app, float direction)
 {
-    (void)button;
-    (void)user_data;
-    /* TODO: commencer décrémentation température */
+    BtnTemp *b = &app->btn_hold;
+
+    b->hold_duration  = 0;
+    b->direction      = direction;
+
+    b->temp_set_point += 0.01f * direction;  // incrément initial
+    b->hold_timer_id   = g_timeout_add(500, on_btn_temp_hold, app);
+
+    char buf[64];
+    snprintf(buf, sizeof(buf), "Setpoint ΔT = %.3f °C", b->temp_set_point);
+    gtk_label_set_text(GTK_LABEL(label_setpoint_temp), buf);
 }
 
-void on_btn_decrease_temp_released(GtkButton *button, gpointer user_data)
+/* ── Logique commune released ── */
+static void btn_temp_released(AppData *app)
+{
+    BtnTemp *b   = &app->btn_hold;
+    char     buf[64];
+
+    if (b->hold_timer_id != 0) {
+        g_source_remove(b->hold_timer_id);
+        b->hold_timer_id = 0;
+    }
+
+    snprintf(buf, sizeof(buf), "Setpoint ΔT = %.3f °C", b->temp_set_point);
+    gtk_label_set_text(GTK_LABEL(label_setpoint_temp), buf);
+
+    printf("[BTN] released after %dms → setpoint %.3f°C\n",
+           b->hold_duration, b->temp_set_point);
+    b->hold_duration = 0;
+
+    apply_increment(app);
+}
+
+/* ── Callbacks GTK (wrappers minimalistes) ── */
+gboolean on_btn_increase_pressed(GtkWidget *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
-    /* TODO: arrêter décrémentation température */
+    btn_temp_pressed((AppData *)user_data, +1.0f);
+    return FALSE;
+}
+
+gboolean on_btn_increase_released(GtkWidget *button, gpointer user_data)
+{
+    (void)button;
+    btn_temp_released((AppData *)user_data);
+    return FALSE;
+}
+
+gboolean on_btn_decrease_temp_pressed(GtkWidget *button, gpointer user_data)
+{
+    (void)button;
+    btn_temp_pressed((AppData *)user_data, -1.0f);
+    return FALSE;
+}
+
+gboolean on_btn_decrease_temp_released(GtkWidget *button, gpointer user_data)
+{
+    (void)button;
+    btn_temp_released((AppData *)user_data);
+    return FALSE;
 }
 
 void on_btn_save_mrtd_mesure_clicked(GtkButton *button, gpointer user_data)
@@ -353,11 +446,38 @@ void on_btn_undo_last_mesure_clicked(GtkButton *button, gpointer user_data)
     /* TODO: annuler dernier point MRTD */
 }
 
+/* ── Inversion du signe de ΔT ── */
+static void invert_d(AppData *app)
+{
+    BtnTemp     *b   = &app->btn_hold;
+    GAsyncQueue *q   = app->gpib_queue;
+    char         buf[64];
+
+    // Inverser le signe
+    b->temp_set_point = -b->temp_set_point;
+
+    // Nettoyer le -0.0f
+    if (b->temp_set_point == 0.0f) b->temp_set_point = 0.0f;
+
+    // Mettre à jour le label
+    snprintf(buf, sizeof(buf), "Setpoint ΔT = %.3f °C", b->temp_set_point);
+    gtk_label_set_text(GTK_LABEL(label_setpoint_temp), buf);
+
+    // Envoyer la commande au thread GPIB via la queue
+    gchar *cmd = g_strdup_printf("ST%.2f", b->temp_set_point);
+    g_async_queue_push(q, cmd);
+
+    g_debug("ΔT inversé → setpoint %.3f°C", b->temp_set_point);
+}
+
 void on_btn_invert_d_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
-    /* TODO: inverser signe de d (deltaT ?) et mettre à jour affichage */
+    AppData *app = (AppData *)user_data;
+
+    if (app == NULL) return;
+
+    invert_d(app);
 }
 
 /* ------------------------------------------------------------------ */
@@ -386,7 +506,7 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     /* Labels status/temp/MRTD */
     label_differential_temp = GTK_WIDGET(gtk_builder_get_object(builder, "label_differential_temp"));
     label_setpoint_ready    = GTK_WIDGET(gtk_builder_get_object(builder, "label_setpoint_ready"));
-    label_mrtd_progress     = GTK_WIDGET(gtk_builder_get_object(builder, "label_mrtd_progress"));
+    label_setpoint_temp     = GTK_WIDGET(gtk_builder_get_object(builder, "label_setpoint_temp"));
     label_emitter_temp      = GTK_WIDGET(gtk_builder_get_object(builder, "label_emitter_temp"));
     label_target_temp       = GTK_WIDGET(gtk_builder_get_object(builder, "label_target_temp"));
     label_target_index      = GTK_WIDGET(gtk_builder_get_object(builder, "label_target_index"));
@@ -409,14 +529,7 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     btn_invert_d         = GTK_WIDGET(gtk_builder_get_object(builder, "btn_invert_d"));
     btn_back_menu        = GTK_WIDGET(gtk_builder_get_object(builder, "btn_back_menu"));
     /* Signaux automatiques (basés sur handler="..." dans le .glade) */
-    gtk_builder_connect_signals(builder, NULL);
-
-    /* Signaux génériques */
-    g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
-    g_signal_connect(btn_connect_dev, "clicked", G_CALLBACK(on_btn_connect_dev_clicked), app);
-    g_signal_connect(btn_manual, "clicked", G_CALLBACK(on_btn_manual_clicked), app);
-    g_signal_connect(btn_auto, "clicked", G_CALLBACK(on_btn_auto_clicked), app);
-    g_signal_connect(btn_back_menu, "clicked", G_CALLBACK(on_btn_back_menu_clicked), app);
+    gtk_builder_connect_signals(builder, app);
 
 
     gtk_widget_show_all(window);
