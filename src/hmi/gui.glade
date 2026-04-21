@@ -42,6 +42,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="vexpand">True</property>
+                    <property name="spacing">10</property>
                     <property name="homogeneous">True</property>
                     <child>
                       <object class="GtkBox">
@@ -49,11 +50,11 @@
                         <property name="can-focus">False</property>
                         <property name="orientation">vertical</property>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="label_profile">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="margin-top">10</property>
-                            <property name="label" translatable="yes">Select your mode</property>
+                            <property name="label" translatable="yes">Actual profile: Default</property>
                             <property name="justify">center</property>
                             <attributes>
                               <attribute name="weight" value="bold"/>
@@ -82,17 +83,46 @@
                                 <property name="spacing">15</property>
                                 <property name="homogeneous">True</property>
                                 <child>
-                                  <object class="GtkButton" id="btn_auto">
-                                    <property name="label" translatable="yes">Auto</property>
+                                  <object class="GtkBox">
                                     <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">True</property>
-                                    <signal name="clicked" handler="on_btn_auto_clicked" swapped="no"/>
+                                    <property name="can-focus">False</property>
+                                    <property name="orientation">vertical</property>
+                                    <property name="homogeneous">True</property>
+                                    <child>
+                                      <object class="GtkButton" id="btn_select_profile">
+                                        <property name="label" translatable="yes">Select profile</property>
+                                        <property name="visible">True</property>
+                                        <property name="can-focus">True</property>
+                                        <property name="receives-default">True</property>
+                                        <signal name="clicked" handler="on_btn_select_profile_clicked" swapped="no"/>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="valign">end</property>
+                                    <property name="label" translatable="yes">Select your mode</property>
+                                    <attributes>
+                                      <attribute name="weight" value="bold"/>
+                                    </attributes>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -106,48 +136,21 @@
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">1</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkBox">
+                                  <object class="GtkButton" id="btn_auto">
+                                    <property name="label" translatable="yes">Auto</property>
                                     <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="spacing">15</property>
-                                    <property name="homogeneous">True</property>
-                                    <child>
-                                      <object class="GtkButton" id="btn_tgt_table">
-                                        <property name="label" translatable="yes">Target table</property>
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">True</property>
-                                        <property name="receives-default">True</property>
-                                        <signal name="clicked" handler="on_btn_tgt_table_clicked" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkButton" id="btn_help">
-                                        <property name="label" translatable="yes">Help</property>
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">True</property>
-                                        <property name="receives-default">True</property>
-                                        <signal name="clicked" handler="on_btn_help_clicked" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
-                                      </packing>
-                                    </child>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <signal name="clicked" handler="on_btn_auto_clicked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">2</property>
+                                    <property name="position">3</property>
                                   </packing>
                                 </child>
                               </object>
@@ -221,25 +224,7 @@
                                         <property name="visible">True</property>
                                         <property name="can-focus">True</property>
                                         <property name="receives-default">True</property>
-                                        <property name="margin-end">10</property>
-                                        <property name="margin-bottom">10</property>
                                         <signal name="clicked" handler="on_btn_connect_dev_clicked" swapped="no"/>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">True</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkToggleButton" id="btn_serial_log">
-                                        <property name="label" translatable="yes">Serial Log Toggle</property>
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">True</property>
-                                        <property name="receives-default">True</property>
-                                        <property name="margin-end">10</property>
-                                        <property name="margin-top">10</property>
-                                        <signal name="toggled" handler="on_btn_serial_log_toggled" swapped="no"/>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
@@ -621,28 +606,10 @@
                         <property name="orientation">vertical</property>
                         <property name="homogeneous">True</property>
                         <child>
-                          <object class="GtkLabel" id="label_profile">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Select your profile</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
+                          <placeholder/>
                         </child>
                         <child>
-                          <object class="GtkComboBoxText" id="GtkComboBoxText_profile">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <signal name="changed" handler="on_GtkComboBoxText_profile_changed" swapped="no"/>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
+                          <placeholder/>
                         </child>
                       </object>
                       <packing>

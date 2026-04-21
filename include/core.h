@@ -39,15 +39,18 @@ typedef struct {
 
 // Structure de contexte global pour l'application
 typedef struct {
+    char profiles_path[256];           //Est utilisé une fois à l'init pour stocker le path si dossier profiles présents
+    char *selected_profile_path;   //le profil sélectionné par le user
     ServiceGpib     service_gpib;      // Partagé entre thread service et watchdog
     bool            shutdown_requested;
     bool            device_online;
     pthread_mutex_t mutex;              // Protection des accès 
     pthread_cond_t  cond;               // Signal de synchronisation 
-    GpibData        device_status;      // Données de mesure
+    GpibData        device_status;      // Données de mesure GLOBALES, a utiliser via MUTEX
     BtnTemp         btn_hold;           // Pour logique de bouton d'incrémentation 
     ProgramMode     mode;               // indique le mode actuel de l'hmi (Non protégé)
     GAsyncQueue     *gpib_queue;        // Queu de commande threadsafe ui.c -> service.c
+    GAsyncQueue     *MRTD_queue;        // Queu de commande threadsafe service.c -> ui.c (ex: log, update labels, etc)
 } AppData;
 
 // Dans core.h
@@ -60,5 +63,6 @@ gboolean set_status_offline(gpointer data);
 int hmi_init(int *argc, char ***argv, AppData *app);
 void* thread_service_gpib(void* arg);
 void* thread_handler_watchdog(void* arg);
+void* thread_service_MRTD(void* arg);
 
 #endif

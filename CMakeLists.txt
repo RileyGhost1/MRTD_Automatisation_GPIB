@@ -13,7 +13,6 @@ set(SOURCES_COMMON
     src/gpib_ctrl.c
     src/hmi/hmi_ui.c
     src/services.c
-    src/vision_mrtd.c
 )
 
 # UN SEUL add_executable
@@ -31,6 +30,7 @@ target_link_libraries(mon_app PRIVATE
 )
 
 if(UNIX)
+    target_link_libraries(mon_app PRIVATE cjson)
     target_link_libraries(mon_app PRIVATE gpib)
     target_link_options(mon_app PRIVATE -rdynamic)
 endif()

@@ -8,3 +8,10 @@
 3 # implémenter toute la logique de la procédure et prévoir le cas ou aucun profile n'est choisis.
 
 4 # trouver un moyen d'utiliser le serial pol du bus IEE-4888 pour récupérer le setpoint READY du sr-80
+
+5 # Integrer un thread de procédure MRTD, qui peut etre configurer via lecture d'un fichier json
+
+    5.1 # GtkbtnRefreshProfiles -> permet de lire la section "name" se trouvant dans chaque fichier json le stock et mets à jour
+    la combobox en conséquence.
+
+    5.2 # Parser entierrement le seul fichier .json sélectionné via la combobox, retourné depuis le calback GTKcombobox_changed

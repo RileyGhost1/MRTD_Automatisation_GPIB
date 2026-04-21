@@ -1,0 +1,13 @@
+{  
+  "name": "JIM-COMPACT",
+
+  "test_profile": { 
+    "standard": "STANAG_4349",
+    "blackbody_model": "SR-80",
+    "target_wheel_model": "RAD-12",
+    "wheel_positions_available": 12,
+    "minimum_spatial_frequencies": 4,
+    "samples_per_frequency": 3,
+    "orientation_modes": ["horizontal", "vertical"]
+  }
+}

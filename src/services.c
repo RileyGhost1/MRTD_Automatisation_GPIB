@@ -44,7 +44,7 @@ void app_set_service_gpib(AppData *app, ServiceGpib service) {
     pthread_mutex_unlock(&app->mutex);
 }
 
-// Réalise la tansmission du snapshot -> global (securise)
+// Réalise la tansmission du snapshot -> global (securise) pour que les autres threads puissent y accéder et que le mutex soit libere le plus tôt possible.
 void global_data_transfer(AppData *app, GpibData *local)
 {
     pthread_mutex_lock(&app->mutex);
@@ -82,9 +82,9 @@ bool app_check_shutdown_requested(AppData *app) {
      - En SHUTDOWN, il ferme proprement la connexion GPIB et termine le thread.
 */
 void* thread_service_gpib(void* arg) {
-    ServiceGpib service_gpib;
+    ServiceGpib service_gpib; 
     AppData *app = (AppData*)arg;
-    GpibData local_snapshot; // Stockage local pour le polling "hors-mutex"
+    GpibData local_snapshot; // Stockage local pour le polling "hors-mutex", Structure local de type GpibData
 
     printf("Thread Service GPIB démarré.\n");
 
@@ -102,7 +102,7 @@ void* thread_service_gpib(void* arg) {
         pthread_mutex_unlock(&app->mutex);
         /*
             * Machine à états du service GPIB: Travaille en parallele avec le thread de watchdog. Le watchdog est la pour simplifier la logique du programme.
-            * la tentative de connection se lance et repasse en IDLE, le polling continue tant que l'appareil est en ligne.
+            * la tentative de connection se lance et repasse en IDLE, le polling continue tant que l'appareil est en ligne && si un mode est selectionne.
             * Si une erreur survient, le service repasse systematiquement en IDLE et attend que le watchdog gere la situation.
         */
         switch(service_gpib){
@@ -184,4 +184,24 @@ void* thread_handler_watchdog(void* arg) {
 
     app_set_connection_status(app, false, SHUTDOWN);
     return NULL;
+}
+
+/* TODO: parsing complet du fichier json selectionne via la GTKComboBoxText, Si le parsin est reussis le thread copie localement les donnees du SR-80 via
+la structure gpibdata (global) en utilisant un mutex. 
+*/
+void* thread_service_MRTD(void* arg) {
+    AppData *app = (AppData*)arg; // structure globale de l'application (sous mutex)
+    GpibData local_snapshot; // Structure local de type GpibData
+
+    if (app == NULL) return NULL;
+
+
+    //while(1){}
+    //mettre en place un switch case pour les commandes envoye depuis l'UI (ex: lancement de profil, reset data, etc)
+    //g_async_queue_try_pop(app->MRTD_queue); // Lire les commandes de l'UI
+    
+    pthread_mutex_lock(&app->mutex);
+    local_snapshot = app->device_status;  // Copie par valeur — sûr car que des scalaires (Si char * ou tableau, il faudrait faire une copie profonde)
+    pthread_mutex_unlock(&app->mutex);
+    
 }
