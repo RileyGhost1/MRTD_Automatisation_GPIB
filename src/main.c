@@ -15,12 +15,15 @@
 /* --- Définition du contexte global --- */
 // On initialise ici la mémoire, mais on passera son adresse aux threads[cite: 15].
 AppData g_appdata = {
+    .profiles_path = {0},           //Est utilisé une fois à l'init pour stocker le path si dossier profiles présents
+    .selected_profile_path = NULL,   //le profil sélectionné par le user
     .service_gpib       = IDLE,
     .shutdown_requested = FALSE,
     .device_online      = FALSE,
     .mutex              = PTHREAD_MUTEX_INITIALIZER,
     .cond               = PTHREAD_COND_INITIALIZER,
     .gpib_queue         = NULL,
+    .MRTD_queue         = NULL,
     .device_status      = {
         .ud = -1,
         .actual_dt = 0.0,
@@ -63,6 +66,7 @@ int main(int argc, char **argv)
 
     init_profiles_dir(g_appdata.profiles_path, sizeof(g_appdata.profiles_path));
     g_appdata.gpib_queue = g_async_queue_new();
+    g_appdata.MRTD_queue = g_async_queue_new();
 
     printf("Démarrage de l'application GPIB...\n");
 

@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <cjson/cJSON.h>
 #include <dirent.h>
+#include <libgen.h>
 #include "core.h"
 #include "gpib.h"     
 
@@ -191,6 +192,15 @@ void on_btn_auto_clicked(GtkButton *button, gpointer user_data)
     /* gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page1"); */
 }
 
+gboolean change_window(gpointer data) { /* MENU, MANUAL */
+    char *page = (char *)data;
+
+    gtk_stack_set_visible_child_name(GTK_STACK(stack1),page);
+    free(page);
+
+    return FALSE;
+}
+
 void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
@@ -200,28 +210,12 @@ void on_btn_manual_clicked(GtkButton *button, gpointer user_data)
 
     if (app == NULL) return;
 
-    if(mode != MENU){
-        return;                  //Ne dois jamais éxécuter cette ligne
-    } else {
-        mode = MANUAL;
-    }
-
-    app_set_service_gpib(app, COMMUNICATION);
     hmi_log_append("Mode manuel demandé...");
-
-    gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page1");
-}
-
-void on_GtkComboBoxText_profile_changed(GtkComboBox *combo, gpointer user_data)
-{
-    (void)combo;
-        // RÉCUPÉRATION DU POINTEUR :
-    AppData *app = (AppData *)user_data;
-
-    if (app == NULL) return; // Sécurité
-
+    mrtd_cmd_queu(app, PARSE);
+    LOG_MSG("Parsing demandé");
     
 }
+
 
 static gboolean on_combo_touch(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     (void)data;
@@ -332,6 +326,7 @@ static void on_profile_row_activated(GtkListBox *box, GtkListBoxRow *row,
                                      gpointer user_data)
 {
     (void)box;
+    char full_path[512];
     AppData *app = (AppData *)user_data;
     if (app == NULL || row == NULL) return;
 
@@ -339,13 +334,15 @@ static void on_profile_row_activated(GtkListBox *box, GtkListBoxRow *row,
     if (!filename) return;
 
     g_free(app->selected_profile_path);
-    app->selected_profile_path = g_strdup(filename);
+
+    snprintf(full_path, sizeof(full_path), "%s/%s", app->profiles_path, filename);
+    app->selected_profile_path = strdup(full_path);
 
     printf("[PROFILE] Sélectionné : %s\n", app->selected_profile_path);
 
-    char buf[300];
-    snprintf(buf, sizeof(buf), "Actual profile: %s", app->selected_profile_path);
-    gtk_label_set_text(GTK_LABEL(label_profile), buf);
+    char tmp[256];
+    strncpy(tmp, app->selected_profile_path, sizeof(tmp) - 1);
+    gtk_label_set_text(GTK_LABEL(label_profile), basename(tmp));
 
     gtk_popover_popdown(GTK_POPOVER(popover_profiles));
 }
@@ -421,23 +418,22 @@ void on_btn_back_menu_clicked(GtkButton *button, gpointer user_data)
 
     if (app == NULL) return; // Sécurité
 
-    if(mode == MENU){
-        hmi_log_append("ERROR: Impossible de retourner\nau menu.");
-        return;                       //Ne dois jamais éxécuter cette ligne
-    } else {
-        mode = MENU;
-    }
-
     app_set_service_gpib(app, IDLE);
-    gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page0");
+    gtk_stack_set_visible_child_name(GTK_STACK(stack1), "MENU");
 }
                 
 void on_btn_show_table_clicked(GtkButton *button, gpointer user_data){
     
     (void)button;
+    (void)user_data;
+    
     AppData *app = (AppData *)user_data;
-    if (app == NULL) return; // Sécurité
 
+    if (app == NULL) return;
+
+    hmi_log_append("sending mrtd table show cmd");
+    mrtd_cmd_queu(app, TABLE);
+    LOG_MSG("sending MRTD table show cmd to MRTD thread");
 }
 
 /*
@@ -550,15 +546,25 @@ gboolean on_btn_decrease_temp_released(GtkWidget *button, gpointer user_data)
 void on_btn_save_mrtd_mesure_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    (void)user_data;
-    /* TODO: sauver point MRTD courant, mettre à jour label_mrtd_progress */
+    
+
+    AppData *app = (AppData *)user_data;
+
+    if (app == NULL) return;
+
+    hmi_log_append("sending saving cmd");
+    mrtd_cmd_queu(app, SAVE);
+    LOG_MSG("sending saving cmd to MRTD thread");
 }
 
 void on_btn_export_profile_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
     (void)user_data;
-    /* TODO: afficher table MRTD */
+
+    AppData *app = (AppData *)user_data;
+
+    if (app == NULL) return;
 }
 
 void on_btn_show_graph_clicked(GtkButton *button, gpointer user_data){
@@ -577,7 +583,14 @@ void on_btn_undo_last_mesure_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
     (void)user_data;
-    /* TODO: annuler dernier point MRTD */
+    
+    AppData *app = (AppData *)user_data;
+
+    if (app == NULL) return;
+
+    hmi_log_append("sending mrtd table show cmd");
+    mrtd_cmd_queu(app, UNDO);
+    LOG_MSG("sending MRTD undo last measure cmd to MRTD thread");
 }
 
 /* ── Inversion du signe de ΔT ── */

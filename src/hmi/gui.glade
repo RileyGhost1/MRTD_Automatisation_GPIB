@@ -329,8 +329,8 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="name">page0</property>
-                    <property name="title" translatable="yes">page0</property>
+                    <property name="name">MENU</property>
+                    <property name="title" translatable="yes">MENU</property>
                   </packing>
                 </child>
                 <child>
@@ -622,8 +622,8 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="name">page1</property>
-                    <property name="title" translatable="yes">page1</property>
+                    <property name="name">MANUAL</property>
+                    <property name="title" translatable="yes">MANUAL</property>
                     <property name="position">1</property>
                   </packing>
                 </child>

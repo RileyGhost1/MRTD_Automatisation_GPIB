@@ -3,6 +3,7 @@
 #include <gpib/ib.h>
 #include "core.h"
 #include "gpib.h"
+#include "measure.h"
 
 #define POLLING_DELAY_US 500000 // 500ms de délai entre les polls pour éviter de saturer le CPU et le bus GPIB
 #define WATCHDOG_DELAY_US 1000000 // 1s de délai pour le watchdog, ajustable selon les besoins
@@ -70,7 +71,16 @@ bool app_check_shutdown_requested(AppData *app) {
     return status;
 }
 
+void mrtd_cmd_queu(AppData *app, MrtdCmd cmd)
+{
+    if (app == NULL) return;
 
+    MrtdCmd *cmd_ptr = malloc(sizeof(*cmd_ptr));
+    if (cmd_ptr == NULL) return;
+
+    *cmd_ptr = cmd;
+    g_async_queue_push(app->MRTD_queue, cmd_ptr);
+}
 
 /*====================================================================================================*/
 
@@ -84,7 +94,8 @@ bool app_check_shutdown_requested(AppData *app) {
 void* thread_service_gpib(void* arg) {
     ServiceGpib service_gpib; 
     AppData *app = (AppData*)arg;
-    GpibData local_snapshot; // Stockage local pour le polling "hors-mutex", Structure local de type GpibData
+    if (app == NULL) return NULL;
+    GpibData data_snapshot; // Stockage local pour le polling "hors-mutex", Structure local de type GpibData
 
     printf("Thread Service GPIB démarré.\n");
 
@@ -109,7 +120,7 @@ void* thread_service_gpib(void* arg) {
 
             case CONNECT:
 
-                if((local_snapshot.ud = gpib_init(0,1)) < 0){
+                if((data_snapshot.ud = gpib_init(0,1)) < 0){
                     g_idle_add(hmi_log_append_idle, strdup("ERROR: Connection au SR80 échouée."));                          
                     app_set_connection_status(app, false, IDLE);                                                                                
                 } else {                                                                                               
@@ -120,27 +131,27 @@ void* thread_service_gpib(void* arg) {
                                                                                                   
             case COMMUNICATION:
                 /* Vérification si une commande est présente, si pas de commande dans la queu -> break */        
-                gpib_cmd_queu(local_snapshot.ud, app);
+                gpib_cmd_queu(data_snapshot.ud, app);
 
                 if(app_is_device_online(app) == false){                                                                 
                     g_idle_add(hmi_log_append_idle, strdup("ERROR: Appareil hors ligne.\nImpossible de lancer le polling.\nRetour en IDLE.")); 
                     app_set_connection_status(app, false, IDLE);
                     break;
-                } else if (gpib_read_all(local_snapshot.ud, &local_snapshot) < 0) {                                              
+                } else if (gpib_read_all(data_snapshot.ud, &data_snapshot) < 0) {                                              
                     g_idle_add(hmi_log_append_idle, strdup("ERROR: Lecture GPIB échouée.\nRetour en IDLE."));           
                     app_set_connection_status(app, false, IDLE); 
                 } else {
                     //app_set_connection_status(app, true, COMMUNICATION); //Décommenter si polling constant même dans le menu désiré. 
                     //g_idle_add(hmi_log_append_idle, strdup("INFO: Lecture GPIB OK.")); //POUR test
-                    gpib_is_temp_ready(local_snapshot.ud, &local_snapshot);
-                    global_data_transfer(app, &local_snapshot);
+                    gpib_is_temp_ready(data_snapshot.ud, &data_snapshot);
+                    global_data_transfer(app, &data_snapshot);
                     usleep(POLLING_DELAY_US); // Délai de polling pour éviter de saturer le CPU et le bus GPIB
                 }                                                                                  
                 break;     
 
             case SHUTDOWN:
 
-                ibonl(local_snapshot.ud,0);                                     
+                ibonl(data_snapshot.ud,0);                                     
                 return NULL;
 
             default:
@@ -186,22 +197,92 @@ void* thread_handler_watchdog(void* arg) {
     return NULL;
 }
 
-/* TODO: parsing complet du fichier json selectionne via la GTKComboBoxText, Si le parsin est reussis le thread copie localement les donnees du SR-80 via
-la structure gpibdata (global) en utilisant un mutex. 
+/*
+    PARSE:  - s'occupe du parsing du fichier json et passe du menu -> manual dans l'ui.
+            - si parsing réuissit le thread de polling gpib est lancé. 
+            - Transmet les commandes de contexte pour commencer le test dans un état définis.
+
+    SAVE:   - Check si le programme est sur la bonne cible (sinon entrée ignorée).
+            - Check si c'est une mesure de température positive ou négarive qui est attendue.
+            - Si espace disponible -> tableau[], sinon sample suivant/rotation cible/test complet.
+            - Si 1 valeurs positive et négative ont été stocké -> sample++.
+            - Si sample == 3 -> rotation de la cible.
+            - Si tableau de valeur complet -> btn graph accessible + save MRTD change de label pour continue
+            - Si continue alors dump en json réalisé. 
+    
+    UNDO:   - Retire la dernière valeur stocké dans le tableau[].
+
+    TABLE:  - Affiche dans dans l'ui les données actuellements stockées
+
+    Note: - Un tableau MRTD_Measure[] doit être utiliser pour être partagé à travers les différents case. (dimension à définir)
+          - A la fin du test, depuis le json un pdf est fournis avec les informations du test et la courbes MRTD depuis
+            html css.
 */
 void* thread_service_MRTD(void* arg) {
     AppData *app = (AppData*)arg; // structure globale de l'application (sous mutex)
-    GpibData local_snapshot; // Structure local de type GpibData
+    GpibData data_snapshot; // Structure local de type GpibData
+    MrtdProfile profile_data;
+    MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2];
+    memset(measures, 0, sizeof(MrtdMeasure) * MAX_TARGETS * MAX_SAMPLES * 2);
+    char path[256] = {0};
 
     if (app == NULL) return NULL;
 
+      while (!app_check_shutdown_requested(app)) {
 
-    //while(1){}
-    //mettre en place un switch case pour les commandes envoye depuis l'UI (ex: lancement de profil, reset data, etc)
-    //g_async_queue_try_pop(app->MRTD_queue); // Lire les commandes de l'UI
-    
-    pthread_mutex_lock(&app->mutex);
-    local_snapshot = app->device_status;  // Copie par valeur — sûr car que des scalaires (Si char * ou tableau, il faudrait faire une copie profonde)
-    pthread_mutex_unlock(&app->mutex);
-    
+        // Attente bloquante d'une commande UI
+        
+        MrtdCmd *cmd = (MrtdCmd*)g_async_queue_timeout_pop(app->MRTD_queue, 5000000); //Attente de commande (bloquante) 
+        
+        pthread_mutex_lock(&app->mutex);
+        data_snapshot = app->device_status;  // Copie par valeur — sûr car que des scalaires (Si char * ou tableau, il faudrait faire une copie profonde)
+        pthread_mutex_unlock(&app->mutex);
+        if (!cmd) continue;
+        MrtdCmd command = *cmd;
+        
+        free(cmd);
+        
+            switch (command) {
+
+                case PARSE:
+                    if (mrtd_load_profile(app, &profile_data) < 0){
+                        LOG_MSG("ERROR load profile");
+                        app_set_service_gpib(app, IDLE); //sous mutex
+                        break;
+                    } else {
+                
+                        g_idle_add(change_window, strdup("MANUAL"));
+                        LOG_MSG("Display MANUAL MODE");
+                        app_set_service_gpib(app, COMMUNICATION); //sous mutex
+                    }
+                    mrtd_init_sequence(app, &data_snapshot, &profile_data);
+                    break;
+                    
+                case SAVE:
+                    mrtd_cmd_save(app, &data_snapshot, &profile_data, measures);
+                    break;
+
+                case UNDO:
+                    mrtd_cmd_undo_last_profile(app, &data_snapshot, &profile_data, measures);
+                    break;       
+
+                case TABLE:
+                    mrtd_cmd_table(measures);
+                break;
+                
+                case STOP:
+                    g_idle_add(change_window, strdup("MANUAL"));
+                    LOG_MSG("Display MANUAL MODE");
+                    app_set_service_gpib(app, IDLE);
+                    break;
+
+
+
+                default:
+                    fprintf(stderr, "[MRTD] Commande inconnue: %d\n", command);
+                    return NULL;
+                    break;
+            }
+    }
+
 }

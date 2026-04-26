@@ -13,6 +13,8 @@ set(SOURCES_COMMON
     src/gpib_ctrl.c
     src/hmi/hmi_ui.c
     src/services.c
+    src/parsing.c
+    src/mrtd.c
 )
 
 # UN SEUL add_executable

@@ -5,6 +5,10 @@
 #include <gtk/gtk.h>
 
 
+
+#define LOG_MSG(fmt, ...) \
+    g_message("[%s | tid=%lu] " fmt, __func__, pthread_self(), ##__VA_ARGS__) //macro pour affichage de log
+
 typedef enum
 {
     MENU,
@@ -19,6 +23,14 @@ typedef enum
     COMMUNICATION,
     SHUTDOWN
 } ServiceGpib;
+
+typedef enum {
+    PARSE,   // User a sélectionné profil + appuyé "Mode Manuel"
+    SAVE,
+    UNDO,
+    TABLE,
+    STOP
+} MrtdCmd;
 
 // Structure pour les données brutes du matériel
 typedef struct {
@@ -53,9 +65,9 @@ typedef struct {
     GAsyncQueue     *MRTD_queue;        // Queu de commande threadsafe service.c -> ui.c (ex: log, update labels, etc)
 } AppData;
 
-// Dans core.h
 
-
+gboolean change_window(gpointer data);
+void mrtd_cmd_queu(AppData *app, MrtdCmd cmd);
 void app_set_service_gpib(AppData *app, ServiceGpib service);
 gboolean hmi_log_append_idle(gpointer data);
 gboolean set_status_online(gpointer data);
