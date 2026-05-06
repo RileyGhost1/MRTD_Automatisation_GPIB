@@ -41,6 +41,12 @@ static GtkWidget *btn_invert_d;
 static GtkWidget *btn_back_menu;
 static GtkWidget *btn_select_profile;
 
+/*Pour page d'exports résultats*/
+static GtkWidget *btn_cancel;         
+static GtkWidget *btn_eject_usb;        
+static GtkWidget *btn_export_usb;
+static GtkWidget *entry_asset;      
+static GtkWidget *txtView_export;
 
 ProgramMode mode = MENU;
 
@@ -54,6 +60,65 @@ Nous ne pouvons pas mettre a jour un label comme gtk_label_set_text() depuis le 
 
 TODO: mettre en place un systeme de queu pour transmettre les actions a executer par le thread gpib. 
 */
+
+void force_hmi_on_dsi(GtkWidget *window_hmi) {
+    GdkDisplay *display = gdk_display_get_default();
+    int num_monitors = gdk_display_get_n_monitors(display);
+    
+    int index_dsi = 1;  // Par défaut, d'après ton diagnostic, le DSI était l'index 1
+    
+    // 1. Chercher dynamiquement l'index de l'écran tactile
+    for (int i = 0; i < num_monitors; i++) {
+        GdkMonitor *monitor = gdk_display_get_monitor(display, i);
+        const char *modele = gdk_monitor_get_model(monitor);
+        
+        if (modele != NULL && strstr(modele, "DSI") != NULL) {
+            index_dsi = i;
+            break; // On a trouvé le DSI, on sort de la boucle
+        }
+    }
+    
+    // 2. Forcer la fenêtre principale sur cet écran précis
+    gtk_widget_realize(window_hmi); 
+    gtk_window_fullscreen_on_monitor(GTK_WINDOW(window_hmi), 
+                                     gdk_window_get_screen(gtk_widget_get_window(window_hmi)), 
+                                     index_dsi);
+                                     
+    gtk_widget_show_all(window_hmi);
+}
+
+void display_detect() {
+    // 1. Obtenir le "Display" (le serveur X11 actif)
+    GdkDisplay *display = gdk_display_get_default();
+    
+    if (display == NULL) {
+        g_printerr("Erreur critique: Aucun serveur graphique (X11) détecté.\n");
+        return;
+    }
+
+    // 2. Récupérer le nombre de moniteurs branchés
+    int num_monitors = gdk_display_get_n_monitors(display);
+    g_print("--- DIAGNOSTIC DES ECRANS ---\n");
+    g_print("Nombre d'écrans détectés : %d\n", num_monitors);
+
+    // 3. Boucler pour analyser chaque moniteur
+    for (int i = 0; i < num_monitors; i++) {
+        GdkMonitor *monitor = gdk_display_get_monitor(display, i);
+        
+        // Récupérer le nom matériel (très pratique pour les différencier)
+        const char *modele = gdk_monitor_get_model(monitor);
+        
+        // Récupérer la taille et la position (Géométrie)
+        GdkRectangle geom;
+        gdk_monitor_get_geometry(monitor, &geom);
+
+        g_print("\n[ Moniteur %d ]\n", i);
+        g_print("  -> Modèle     : %s\n", modele ? modele : "Inconnu");
+        g_print("  -> Résolution : %d x %d pixels\n", geom.width, geom.height);
+        g_print("  -> Position   : X=%d, Y=%d\n", geom.x, geom.y);
+    }
+    g_print("-----------------------------\n");
+}
 
 /* ------------------------------------------------------------------ */
 
@@ -187,7 +252,7 @@ gboolean hmi_log_append_idle(gpointer data)
 void on_btn_auto_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
-    
+
     /* TODO: basculer stack1 vers la page1 en mode AUTO, init séquence auto */
     /* gtk_stack_set_visible_child_name(GTK_STACK(stack1), "page1"); */
 }
@@ -570,6 +635,16 @@ void on_btn_export_profile_clicked(GtkButton *button, gpointer user_data)
 void on_btn_show_graph_clicked(GtkButton *button, gpointer user_data){
     (void)button;
     (void)user_data;
+
+    AppData *app = (AppData *)user_data;
+
+    if (app == NULL) return;
+
+    change_window(g_strdup("EXPORT"));
+
+    hmi_log_append("Affichage du graph MRTD demandé...");
+    mrtd_cmd_queu(app, GRAPH);
+    LOG_MSG("Display graph");
 }
 
 void on_btn_reset_data_clicked(GtkButton *button, gpointer user_data)
@@ -627,6 +702,39 @@ void on_btn_invert_d_clicked(GtkButton *button, gpointer user_data)
     invert_d(app);
 }
 
+#pragma region EXPORT
+/* PAGE EXPORT */
+
+void on_btn_cancel_clicked(GtkButton *button, gpointer user_data)
+{
+    (void)button;
+    (void)user_data;
+
+    LOG_MSG("Export cancelled");
+}
+
+void on_btn_export_usb_clicked(GtkButton *button, gpointer user_data)
+{
+    (void)button;
+    (void)user_data;
+
+    LOG_MSG("Exporting to USB drive");
+}
+
+void on_btn_eject_usb_clicked(GtkButton *button, gpointer user_data)
+{
+    (void)button;
+    (void)user_data;
+
+    LOG_MSG("Ejecting USB drive");
+}
+
+
+
+#pragma endregion
+
+/*             */
+
 /* ------------------------------------------------------------------ */
 /* Initialisation HMI                                                 */
 /* ------------------------------------------------------------------ */
@@ -638,6 +746,8 @@ int hmi_init(int *argc, char ***argv, AppData *app)
 
     gtk_init(argc, argv);
 
+    //display_detect(); // Affiche les infos sur les écrans connectés (utile pour le debug et la configuration)
+    
     GtkSettings *settings = gtk_settings_get_default();
     g_object_set(settings, "gtk-enable-animations", FALSE, NULL);
 
@@ -645,7 +755,10 @@ int hmi_init(int *argc, char ***argv, AppData *app)
 
     /* Fenêtre principale */
     window = GTK_WIDGET(gtk_builder_get_object(builder, "hWindows"));
-
+    system("xinput map-to-output \"10-0038 generic ft5x06 (79)\" DSI-1"); // à été nécessaire pour mapper l'écran tactile sur le bon écran,
+    //  à garder en dur pour éviter les erreurs de mapping qui rendent l'interface inaccessible.
+    //  Idéalement, il faudrait détecter dynamiquement le bon écran et faire le mapping au lancement de l'application.
+    force_hmi_on_dsi(window);
     /* Stack principal */
     stack1 = GTK_WIDGET(gtk_builder_get_object(builder, "stack1"));
 
@@ -680,6 +793,13 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     btn_invert_d         = GTK_WIDGET(gtk_builder_get_object(builder, "btn_invert_d"));
     btn_back_menu        = GTK_WIDGET(gtk_builder_get_object(builder, "btn_back_menu"));
 
+    /* Boutons pour la page d'export des résultats */
+    btn_cancel           = GTK_WIDGET(gtk_builder_get_object(builder, "btn_cancel"));
+    btn_eject_usb        = GTK_WIDGET(gtk_builder_get_object(builder, "btn_eject_usb"));
+    btn_export_usb       = GTK_WIDGET(gtk_builder_get_object(builder, "btn_export_usb"));       
+    entry_asset          = GTK_WIDGET(gtk_builder_get_object(builder, "entry_asset"));
+    txtView_export       = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_export"));
+
     GtkWidget *btn_select = GTK_WIDGET(gtk_builder_get_object(builder, "btn_select_profile"));
     create_profile_popover(btn_select, app);
 
@@ -687,7 +807,6 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     gtk_builder_connect_signals(builder, app);
 
 
-    gtk_widget_show_all(window);
     g_object_unref(builder);  /* ← après tous les gtk_builder_get_object */
 
     /* Timer de mise à jour des labels */

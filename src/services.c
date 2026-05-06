@@ -226,6 +226,14 @@ void* thread_service_MRTD(void* arg) {
     memset(measures, 0, sizeof(MrtdMeasure) * MAX_TARGETS * MAX_SAMPLES * 2);
     char path[256] = {0};
 
+    #pragma region debug
+    float dt_axes_debug[MAX_TARGETS] = {0.2, 0.5, 0.9, 1.5};
+    float tgt_axes_debug[MAX_TARGETS] = {0.25, 0.5, 1, 2};
+    #pragma endregion 
+
+    float dt_axes  [4] = {0.2, 0.5, 0.9, 1.5};
+    float tgt_axes [4] = {0.25, 0.5, 1, 2};
+
     if (app == NULL) return NULL;
 
       while (!app_check_shutdown_requested(app)) {
@@ -270,13 +278,18 @@ void* thread_service_MRTD(void* arg) {
                     mrtd_cmd_table(measures);
                 break;
                 
+                case GRAPH:
+                    //void draw_mrtd_graph(const float *dt_axes, const float *tgt_axes, int count)
+                    if(draw_mrtd_graph(dt_axes_debug, tgt_axes_debug, 4) < 0) {
+                        LOG_MSG("ERROR draw graph");
+                    }
+                break;
+
                 case STOP:
                     g_idle_add(change_window, strdup("MANUAL"));
                     LOG_MSG("Display MANUAL MODE");
                     app_set_service_gpib(app, IDLE);
                     break;
-
-
 
                 default:
                     fprintf(stderr, "[MRTD] Commande inconnue: %d\n", command);

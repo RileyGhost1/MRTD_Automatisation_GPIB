@@ -15,3 +15,4 @@
     la combobox en conséquence.
 
     5.2 # Parser entierrement le seul fichier .json sélectionné via la combobox, retourné depuis le calback GTKcombobox_changed
+

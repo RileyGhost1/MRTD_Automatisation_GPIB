@@ -13,7 +13,8 @@ typedef enum
 {
     MENU,
     MANUAL,
-    AUTO
+    AUTO,
+    EXPORT
 } ProgramMode;
 
 typedef enum
@@ -29,6 +30,7 @@ typedef enum {
     SAVE,
     UNDO,
     TABLE,
+    GRAPH,
     STOP
 } MrtdCmd;
 

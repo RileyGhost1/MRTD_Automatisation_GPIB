@@ -48,6 +48,9 @@ void mrtd_cmd_save(AppData *app, GpibData *context, MrtdProfile *profile, MrtdMe
 void mrtd_cmd_table(MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2]);
 void mrtd_cmd_undo_last_profile(AppData *app, GpibData *context, MrtdProfile *profile, MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2]);
 int mrtd_load_profile(AppData *app, MrtdProfile *out);
+void resume_mrtd(const MrtdProfile *profile,MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2]);
+int draw_mrtd_graph(const float *dt_axes, const float *tgt_axes, int count);
+static int update_hdmi_display(const char *image_path);
 static int profile_parse(const char *filepath, MrtdProfile *out);
 static void profile_debug_print(const MrtdProfile *p);
 

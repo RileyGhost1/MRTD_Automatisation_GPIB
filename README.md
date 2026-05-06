@@ -78,4 +78,12 @@ sudo apt install --no-install-recommends xserver-xorg x11-xserver-utils xinit
 sudo apt install libgtk-3-dev
 sudo apt install openbox
 
+## Installation de dépendances pour générer le rapport
 
+sudo apt update
+sudo apt install libharu
+sudo apt install gnuplot
+sudo apt install matchbox-keyboard
+sudo apt install xdotool
+sudo apt install xinput
+sudo apt install feh
