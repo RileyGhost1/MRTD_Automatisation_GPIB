@@ -125,7 +125,7 @@ void mrtd_cmd_save(AppData *app, GpibData *context, MrtdProfile *profile, MrtdMe
 
     // 8. Test complet
     LOG_MSG("[MRTD] Test complet");
-    resume_mrtd(profile, measures);
+    resume_mrtd(profile, measures, app->mrtd_results, &app->results_count);
     g_idle_add(hmi_log_append_idle, strdup("[MRTD] Test complet. Prêt pour export."));
 }
 
@@ -189,8 +189,12 @@ void mrtd_cmd_undo_last_profile(AppData *app,
 }
 
 void resume_mrtd(const MrtdProfile *profile,
-                 MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2])
+                 MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2],
+                 MrtdPoint *tab_results,
+                 int *results_count )
 {
+
+
     if (!profile || profile->target_count <= 0 || profile->samples_per_frequency <= 0) {
         LOG_MSG("[MRTD] Profil invalide pour calcul");
         return;
@@ -239,6 +243,12 @@ void resume_mrtd(const MrtdProfile *profile,
 
     for (int i = 0; i < valid_points; i++)
         LOG_MSG("%d. MRTD: x=%.3f cy/mrad, y=%.3f mK", i, tgt_axes[i], dt_axes[i]);
+
+    *results_count = valid_points;
+    for (int i = 0; i < valid_points; i++) {
+        tab_results[i].target  = tgt_axes[i];
+        tab_results[i].delta_t = dt_axes[i];
+    }
 
     if(draw_mrtd_graph(dt_axes, tgt_axes, valid_points) != 0) {
         LOG_MSG("[MRTD] Erreur lors de la génération du graphe");
@@ -297,6 +307,8 @@ int draw_mrtd_graph(const float *dt_axes, const float *tgt_axes, int count)
     if (update_hdmi_display(MRTD_PNG_PATH) != 0) {
         LOG_MSG("[MRTD] Erreur lors de la mise à jour de l'affichage HDMI");
     }
+
+
 
     return 0;
 }

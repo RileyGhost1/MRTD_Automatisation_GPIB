@@ -16,6 +16,7 @@ static GtkWidget *txtView_menu;
 static GtkWidget *txtView_manual_log;
 static GtkWidget *popover_profiles  = NULL;
 static GtkWidget *listbox_profiles  = NULL;
+static GtkWidget *popover_keyboard = NULL;
 
 static GtkWidget *label_differential_temp;
 static GtkWidget *label_setpoint_ready;
@@ -60,6 +61,8 @@ Nous ne pouvons pas mettre a jour un label comme gtk_label_set_text() depuis le 
 
 TODO: mettre en place un systeme de queu pour transmettre les actions a executer par le thread gpib. 
 */
+
+#pragma region COMMON
 
 void force_hmi_on_dsi(GtkWidget *window_hmi) {
     GdkDisplay *display = gdk_display_get_default();
@@ -119,12 +122,6 @@ void display_detect() {
     }
     g_print("-----------------------------\n");
 }
-
-/* ------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------ */
-/* Timer de mise à jour UI                                            */
-/* ------------------------------------------------------------------ */
 
 typedef enum {
     UI_LOCK,
@@ -245,6 +242,9 @@ gboolean hmi_log_append_idle(gpointer data)
 
     return FALSE; // Indique à GTK de ne pas réexécuter cette fonction en boucle
 }
+#pragma endregion
+
+#pragma region MENU
 /* ------------------------------------------------------------------ */
 /* Callbacks MENU principal (page0)                                   */
 /* ------------------------------------------------------------------ */
@@ -419,10 +419,6 @@ void on_btn_import_profile_clicked(GtkButton *button, gpointer user_data)
     /* TODO: afficher fenêtre d'aide / message dialog */
 }
 
-/* ------------------------------------------------------------------ */
-/* Callbacks colonne droite (GPIB / système)                          */
-/* ------------------------------------------------------------------ */
-
 void on_btn_connect_dev_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button; // Pour éviter le warning "unused parameter"
@@ -467,7 +463,9 @@ void on_btn_shutdown_raspi_clicked(GtkButton *button, gpointer user_data)
     gtk_main_quit();
     //n'est pas exécuté g_spawn_command_line_async("sudo shutdown now", NULL);
 }
+#pragma endregion
 
+#pragma region MANUAL
 /* ------------------------------------------------------------------ */
 /* Callbacks page MRTD / MANUAL (page1)                               */
 /* ------------------------------------------------------------------ */
@@ -701,6 +699,7 @@ void on_btn_invert_d_clicked(GtkButton *button, gpointer user_data)
 
     invert_d(app);
 }
+#pragma endregion
 
 #pragma region EXPORT
 /* PAGE EXPORT */
@@ -713,14 +712,64 @@ void on_btn_cancel_clicked(GtkButton *button, gpointer user_data)
     LOG_MSG("Export cancelled");
 }
 
-void on_btn_export_usb_clicked(GtkButton *button, gpointer user_data)
-{
-    (void)button;
-    (void)user_data;
+static void task_export_result_usb(GTask *task, gpointer source_object, gpointer task_data, GCancellable *cancellable) {
+    AppData *app = (AppData *)task_data;
+    int success;
 
-    LOG_MSG("Exporting to USB drive");
+    // Générer le PDF (prend du temps)
+    success = thread_export(app); //exporting.c
+    //copy_to_usb("/mnt/usb/rapport.pdf");
+    
+    // Renvoyer le résultat
+    if (success) {
+        g_task_return_boolean(task, TRUE);
+    } else {
+        g_task_return_new_error(task, G_IO_ERROR, G_IO_ERROR_FAILED, "Erreur d'écriture USB");
+    }
 }
 
+// La fonction appelée quand le thread a fini (S'exécute DANS LE THREAD GTK)
+static void on_export_finished(GObject *source_object, GAsyncResult *res, gpointer user_data) {
+    GError *error = NULL;
+    gboolean success = g_task_propagate_boolean(G_TASK(res), &error);
+    
+    if (success) {
+        hmi_log_append("Export PDF et copie USB réussis !");
+        // Optionnel : cacher un spinner de chargement sur l'UI
+    } else {
+        hmi_log_append("Échec de l'export : vérifiez la clé USB.");
+        g_error_free(error);
+    }
+
+    gtk_widget_set_sensitive(btn_export_usb, TRUE);
+}
+
+/*Gestion de la copie du résultat sur clée usb, géré par un thread glib*/
+void on_btn_export_usb_clicked(GtkButton *button, gpointer user_data) {
+    AppData *app = (AppData *)user_data;
+    
+    const char *texte = gtk_entry_get_text(GTK_ENTRY(entry_asset));
+
+    if (texte == NULL || texte[0] == '\0') {
+        g_print("[HMI] Erreur : L'identifiant de l'asset est vide.\n");
+        hmi_log_append("Erreur : Veuillez saisir l'Asset avant d'exporter.");
+        return;
+    }
+    // On libère l'ancien nom s'il y en avait un
+    if (app->asset_name) free(app->asset_name); 
+    app->asset_name = strdup(texte);
+
+    hmi_log_append("Début de la génération PDF et de la copie USB...");
+    // Optionnel : Afficher un spinner ou griser le bouton
+    gtk_widget_set_sensitive(btn_export_usb, FALSE);
+
+    // Lancer la tâche en arrière-plan
+    GTask *task = g_task_new(NULL, NULL, on_export_finished, app);
+    g_task_set_task_data(task, app, NULL);
+    g_task_run_in_thread(task, task_export_result_usb);
+    g_object_unref(task);
+}
+/* ----------------------------------------------------------------- */
 void on_btn_eject_usb_clicked(GtkButton *button, gpointer user_data)
 {
     (void)button;
@@ -729,11 +778,51 @@ void on_btn_eject_usb_clicked(GtkButton *button, gpointer user_data)
     LOG_MSG("Ejecting USB drive");
 }
 
+gboolean on_entry_asset_button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data) {
+    g_print("[HMI] Toucher détecté sur Entry, ouverture du Popover.\n");
+    
+    // Afficher le Popover
+    gtk_popover_popup(GTK_POPOVER(popover_keyboard));
+    
+    // STOPPER la propagation de l'événement pour éviter la fermeture immédiate !
+    return TRUE; 
+}
 
+// Callback UNIFIÉ pour TOUTES tes touches (A-Z, 0-9)
+gboolean on_key_pressed(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+    // 1. Récupérer la lettre du bouton qui a été touché
+    const gchar *lettre = gtk_button_get_label(GTK_BUTTON(widget));
+    
+    // Sécurité : au cas où un bouton n'aurait pas de label
+    if (lettre == NULL) return TRUE; 
+
+    // 2. Préparer l'insertion à la fin du texte existant
+    gint position = -1; // -1 signifie "ajouter à la fin"
+    
+    // 3. Insérer la lettre dans GtkEntry (entry_asset)
+    gtk_editable_insert_text(GTK_EDITABLE(entry_asset), lettre, -1, &position);
+    
+    // 4. Retourner TRUE pour empêcher GTK de faire des animations lourdes (focus, etc.)
+    return TRUE; 
+}
+
+gboolean on_key_delete_clicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+    gint length = gtk_entry_get_text_length(GTK_ENTRY(entry_asset));
+    
+    if (length > 0) {
+        // Supprime le dernier caractère
+        gtk_editable_delete_text(GTK_EDITABLE(entry_asset), length - 1, length);
+    }
+    return TRUE;
+}
+
+gboolean on_key_enter_clicked(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+    // Ferme le popover
+    gtk_popover_popdown(GTK_POPOVER(popover_keyboard));
+    return TRUE;
+}
 
 #pragma endregion
-
-/*             */
 
 /* ------------------------------------------------------------------ */
 /* Initialisation HMI                                                 */
@@ -755,14 +844,10 @@ int hmi_init(int *argc, char ***argv, AppData *app)
 
     /* Fenêtre principale */
     window = GTK_WIDGET(gtk_builder_get_object(builder, "hWindows"));
-    system("xinput map-to-output \"10-0038 generic ft5x06 (79)\" DSI-1"); // à été nécessaire pour mapper l'écran tactile sur le bon écran,
-    //  à garder en dur pour éviter les erreurs de mapping qui rendent l'interface inaccessible.
-    //  Idéalement, il faudrait détecter dynamiquement le bon écran et faire le mapping au lancement de l'application.
-    force_hmi_on_dsi(window);
-    /* Stack principal */
-    stack1 = GTK_WIDGET(gtk_builder_get_object(builder, "stack1"));
+    system("xinput map-to-output \"10-0038 generic ft5x06 (79)\" DSI-1");
 
-    /* Widgets texte/log */
+    force_hmi_on_dsi(window);
+    stack1 = GTK_WIDGET(gtk_builder_get_object(builder, "stack1"));
     txtView_menu = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_menu"));
     txtView_manual_log = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_manual_log"));
 
@@ -774,7 +859,7 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     label_target_temp       = GTK_WIDGET(gtk_builder_get_object(builder, "label_target_temp"));
     label_target_index      = GTK_WIDGET(gtk_builder_get_object(builder, "label_target_index"));
     label_dev_status        = GTK_WIDGET(gtk_builder_get_object(builder, "label_dev_status"));
-    label_profile        = GTK_WIDGET(gtk_builder_get_object(builder, "label_profile"));
+    label_profile           = GTK_WIDGET(gtk_builder_get_object(builder, "label_profile"));
 
 
     /* Boutons */
@@ -793,15 +878,26 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     btn_invert_d         = GTK_WIDGET(gtk_builder_get_object(builder, "btn_invert_d"));
     btn_back_menu        = GTK_WIDGET(gtk_builder_get_object(builder, "btn_back_menu"));
 
-    /* Boutons pour la page d'export des résultats */
+    /* page d'export des résultats */
     btn_cancel           = GTK_WIDGET(gtk_builder_get_object(builder, "btn_cancel"));
     btn_eject_usb        = GTK_WIDGET(gtk_builder_get_object(builder, "btn_eject_usb"));
     btn_export_usb       = GTK_WIDGET(gtk_builder_get_object(builder, "btn_export_usb"));       
     entry_asset          = GTK_WIDGET(gtk_builder_get_object(builder, "entry_asset"));
     txtView_export       = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_export"));
+    GtkWidget *grid_keyboard = GTK_WIDGET(gtk_builder_get_object(builder, "grid_keyboard"));
+
 
     GtkWidget *btn_select = GTK_WIDGET(gtk_builder_get_object(builder, "btn_select_profile"));
     create_profile_popover(btn_select, app);
+
+    popover_keyboard = gtk_popover_new(entry_asset);
+    gtk_widget_set_size_request(popover_keyboard, 750, 400);
+
+    /* 3. On insère ta magnifique grille Glade dans le Popover C */
+    gtk_container_add(GTK_CONTAINER(popover_keyboard), grid_keyboard);
+
+    /* 4. ON FORCE L'AFFICHAGE (La ligne qui manquait) */
+    gtk_widget_show_all(grid_keyboard);
 
     /* Signaux automatiques (basés sur handler="..." dans le .glade) */
     gtk_builder_connect_signals(builder, app);

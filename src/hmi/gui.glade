@@ -660,8 +660,7 @@
                       <object class="GtkEntry" id="entry_asset">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
-                        <signal name="focus-in-event" handler="on_entry_asset_focus_in_event" swapped="no"/>
-                        <signal name="focus-out-event" handler="on_entry_asset_focus_out_event" swapped="no"/>
+                        <signal name="button-press-event" handler="on_entry_asset_button_press_event" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">1</property>
@@ -821,4 +820,510 @@
       </object>
     </child>
   </object>
+      <!-- n-columns=10 n-rows=4 -->
+      <object class="GtkGrid" id="grid_keyboard">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="row-spacing">10</property>
+        <property name="column-spacing">10</property>
+        <property name="row-homogeneous">True</property>
+        <property name="column-homogeneous">True</property>
+        <child>
+          <object class="GtkButton" id="keyboard_1">
+            <property name="label" translatable="yes">1</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_2">
+            <property name="label" translatable="yes">2</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_a">
+            <property name="label" translatable="yes">A</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_z">
+            <property name="label" translatable="yes">Z</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_e">
+            <property name="label" translatable="yes">E</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_4">
+            <property name="label" translatable="yes">4</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">3</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_3">
+            <property name="label" translatable="yes">3</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_r">
+            <property name="label" translatable="yes">R</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">3</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_5">
+            <property name="label" translatable="yes">5</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">4</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_6">
+            <property name="label" translatable="yes">6</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">5</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_y">
+            <property name="label" translatable="yes">Y</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">5</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_t">
+            <property name="label" translatable="yes">T</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">4</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_7">
+            <property name="label" translatable="yes">7</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">6</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_i">
+            <property name="label" translatable="yes">I</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">7</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_u">
+            <property name="label" translatable="yes">U</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">6</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_8">
+            <property name="label" translatable="yes">8</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">7</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_9">
+            <property name="label" translatable="yes">9</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">8</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_o">
+            <property name="label" translatable="yes">O</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">8</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_0">
+            <property name="label" translatable="yes">0</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">9</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_m">
+            <property name="label" translatable="yes">M</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">9</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_enter">
+            <property name="label" translatable="yes">ENTER</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="image-position">top</property>
+            <signal name="clicked" handler="on_key_enter_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">8</property>
+            <property name="top-attach">3</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_l">
+            <property name="label" translatable="yes">L</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">8</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_k">
+            <property name="label" translatable="yes">K</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">7</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_delete">
+            <property name="label" translatable="yes">DELETE</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="clicked" handler="on_key_delete_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">6</property>
+            <property name="top-attach">3</property>
+            <property name="width">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_j">
+            <property name="label" translatable="yes">J</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">6</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_h">
+            <property name="label" translatable="yes">H</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">5</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_n">
+            <property name="label" translatable="yes">N</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">5</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_b">
+            <property name="label" translatable="yes">B</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">4</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_g">
+            <property name="label" translatable="yes">G</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">4</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_f">
+            <property name="label" translatable="yes">F</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">3</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_v">
+            <property name="label" translatable="yes">V</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">3</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_c">
+            <property name="label" translatable="yes">C</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_d">
+            <property name="label" translatable="yes">D</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">2</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_q">
+            <property name="label" translatable="yes">Q</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_x">
+            <property name="label" translatable="yes">X</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_s">
+            <property name="label" translatable="yes">S</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_pressed" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_w">
+            <property name="label" translatable="yes">W</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">0</property>
+            <property name="top-attach">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="keyboard_p">
+            <property name="label" translatable="yes">P</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="pressed" handler="on_key_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left-attach">9</property>
+            <property name="top-attach">1</property>
+          </packing>
+        </child>
+      </object>
 </interface>

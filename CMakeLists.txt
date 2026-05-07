@@ -26,7 +26,7 @@ set(SOURCES_COMMON
     src/services.c
     src/parsing.c
     src/mrtd.c
-    src/result_pdf.c          
+    src/export.c          
 )
 
 add_executable(mon_app ${SOURCES_COMMON})

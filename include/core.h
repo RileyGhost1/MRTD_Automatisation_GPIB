@@ -51,10 +51,22 @@ typedef struct {
     float  direction;
 } BtnTemp;
 
+typedef struct {
+    float target;  // Ton tgt_axes (ex: la fréquence spatiale ou l'index)
+    float delta_t; // Ton dt_axes (ex: la différence de température)
+} MrtdPoint;
+
 // Structure de contexte global pour l'application
 typedef struct {
     char profiles_path[256];           //Est utilisé une fois à l'init pour stocker le path si dossier profiles présents
     char *selected_profile_path;   //le profil sélectionné par le user
+
+    char *asset_name; 
+    char *graph_png_path; 
+    MrtdPoint *mrtd_results; // pointeurs vers un tableau, permet de définir la taille dynamiquement selon le profil chargé et de le partager à travers les différentes fonctions de l'application (ex: save, export, etc)
+    int results_count; 
+
+
     ServiceGpib     service_gpib;      // Partagé entre thread service et watchdog
     bool            shutdown_requested;
     bool            device_online;
@@ -78,5 +90,5 @@ int hmi_init(int *argc, char ***argv, AppData *app);
 void* thread_service_gpib(void* arg);
 void* thread_handler_watchdog(void* arg);
 void* thread_service_MRTD(void* arg);
-
+int   thread_export(AppData *app);
 #endif
