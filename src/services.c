@@ -225,6 +225,9 @@ void* thread_service_MRTD(void* arg) {
     MrtdMeasure measures[MAX_TARGETS][MAX_SAMPLES][2];
     memset(measures, 0, sizeof(MrtdMeasure) * MAX_TARGETS * MAX_SAMPLES * 2);
     char path[256] = {0};
+    float temp_tgt[MAX_TARGETS] = {0};
+    float temp_dt[MAX_TARGETS]  = {0};
+
 
     #pragma region debug
     float dt_axes_debug[MAX_TARGETS] = {0.2, 0.5, 0.9, 1.5};
@@ -279,10 +282,28 @@ void* thread_service_MRTD(void* arg) {
                 break;
                 
                 case GRAPH:
-                    //void draw_mrtd_graph(const float *dt_axes, const float *tgt_axes, int count)
-                    if(draw_mrtd_graph(dt_axes_debug, tgt_axes_debug, 4) < 0) {
+
+                    for(int i = 0; i < app->results_count; i++) {
+                        // Accès aux éléments du tableau de structures MrtdPoint
+                        temp_tgt[i] = app->mrtd_results[i].target;
+                        temp_dt[i]  = app->mrtd_results[i].delta_t;
+                    }
+                    
+                    // 4. Appel de la fonction de dessin avec les tableaux temporaires
+                    if(draw_mrtd_graph(temp_tgt, temp_dt, app->results_count) < 0) {
                         LOG_MSG("ERROR draw graph");
                     }
+                /*    
+                    for(int i = 0; i < profile_data.target_count; i++){
+                        app->mrtd_results[i].target  = tgt_axes_debug[i];
+                        app->mrtd_results[i].delta_t = dt_axes_debug[i];
+                    }
+                    app->results_count = profile_data.target_count;
+                    
+                    if(draw_mrtd_graph(dt_axes_debug, tgt_axes_debug, app->results_count) < 0) {
+                        LOG_MSG("ERROR draw graph");
+                    }
+                */
                 break;
 
                 case STOP:

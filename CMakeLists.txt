@@ -4,6 +4,7 @@ project(MRTD_Automatisation_GPIB C)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK3    REQUIRED IMPORTED_TARGET gtk+-3.0)
 pkg_check_modules(GMODULE REQUIRED IMPORTED_TARGET gmodule-2.0)
+pkg_check_modules(UDEV    REQUIRED IMPORTED_TARGET libudev)
 
 # ─── libharu ───────────────────────────────────────────────
 find_path(HPDF_INCLUDE_DIR   NAMES hpdf.h)
@@ -37,15 +38,17 @@ target_include_directories(mon_app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/pbplot
     ${HPDF_INCLUDE_DIR}        # ← headers hpdf.h
+    
 )
 
 target_link_libraries(mon_app PRIVATE
     PkgConfig::GTK3
     PkgConfig::GMODULE
+    PkgConfig::UDEV
     ${HPDF_LIBRARY}            # ← libhpdf
     PNG::PNG                   # ← libpng (dépendance libharu)
     ZLIB::ZLIB                 # ← zlib  (dépendance libharu)
-    m
+    
 )
 
 if(UNIX)

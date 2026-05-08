@@ -2,14 +2,6 @@
 #include <math.h>
 #include "core.h"
 #include "measure.h"
-
-
-/*  Pour préserver la lecture écriture de la carte SD nous allons stocker les fichiers
-    temporaires dans une partie dédié de la ram.
-*/
-#define MRTD_PNG_PATH "/dev/shm/mrtd_result.png"
-#define MRTD_DAT_PATH "/dev/shm/mesure.dat"
-#define MRTD_GP_PATH  "/dev/shm/plot.gp"
 /*
 PARSE
 */

@@ -4,7 +4,14 @@
 #include <stdbool.h>
 #include <gtk/gtk.h>
 
-
+/*  
+ Pour préserver la lecture écriture de la carte SD nous allons stocker les fichiers
+ temporaires dans une partie dédié de la ram.
+*/
+#define MRTD_PNG_PATH "/dev/shm/mrtd_result.png"
+#define MRTD_DAT_PATH "/dev/shm/mesure.dat"
+#define MRTD_GP_PATH  "/dev/shm/plot.gp"
+#define MRTD_PDF_PATH "rapport_mrtd.pdf"
 
 #define LOG_MSG(fmt, ...) \
     g_message("[%s | tid=%lu] " fmt, __func__, pthread_self(), ##__VA_ARGS__) //macro pour affichage de log
@@ -63,7 +70,7 @@ typedef struct {
 
     char *asset_name; 
     char *graph_png_path; 
-    MrtdPoint *mrtd_results; // pointeurs vers un tableau, permet de définir la taille dynamiquement selon le profil chargé et de le partager à travers les différentes fonctions de l'application (ex: save, export, etc)
+    MrtdPoint mrtd_results[12]; // pointeurs vers un tableau, permet de définir la taille dynamiquement selon le profil chargé et de le partager à travers les différentes fonctions de l'application (ex: save, export, etc)
     int results_count; 
 
 

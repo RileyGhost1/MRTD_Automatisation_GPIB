@@ -679,7 +679,7 @@
                             <property name="can-focus">True</property>
                             <property name="shadow-type">in</property>
                             <child>
-                              <object class="GtkTextView" id="textview_export">
+                              <object class="GtkTextView" id="txtView_export">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                               </object>

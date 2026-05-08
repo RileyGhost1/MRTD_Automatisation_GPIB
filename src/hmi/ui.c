@@ -203,18 +203,44 @@ gboolean set_status_offline(gpointer data)
     return FALSE;
 }
 
+#include <gtk/gtk.h>
+#include <string.h>
+
+// On suppose que MANUAL, MENU et EXPORT sont des macros définies plus haut
+// par exemple : #define MANUAL "page_manual"
+
 void hmi_log_append(const char *text)
 {
-    if (!txtView_menu) return;
-    if (!txtView_manual_log) return;
+    if ((!txtView_menu) || (!txtView_manual_log) || (!txtView_export)){
+        LOG_MSG("Erreur: TextView non initialisée, impossible d'afficher le log.");
+        return;
+    }
 
-    // Choisir la vue cible selon le mode
-    GtkWidget *target_view;
+    // PLUS BESOIN DU BUILDER ICI ! On utilise la variable globale stack1
+    if (!stack1) {
+        LOG_MSG("Erreur: stack1 global est NULL.");
+        return;
+    }
 
-    if (mode == MANUAL) {
+    // Récupérer le nom de la page (ex: "page_menu", "page_manual")
+    const gchar *page = gtk_stack_get_visible_child_name(GTK_STACK(stack1));
+    GtkWidget *target_view = NULL;
+
+    if (!page) {
+        LOG_MSG("Erreur: Aucune page visible dans le Stack.");
+        return;
+    }
+
+    // On compare avec les noms exacts définis dans ton fichier .glade
+    if (g_strcmp0(page, "MANUAL") == 0) {
         target_view = txtView_manual_log;
-    } else {
+    } else if (g_strcmp0(page, "MENU") == 0) {
         target_view = txtView_menu;
+    } else if (g_strcmp0(page, "EXPORT") == 0) {
+        target_view = txtView_export;
+    } else {
+        LOG_MSG("Nom de page non géré pour les logs: %s", page);
+        return;
     }
 
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(target_view));
@@ -483,6 +509,7 @@ void on_btn_back_menu_clicked(GtkButton *button, gpointer user_data)
 
     app_set_service_gpib(app, IDLE);
     gtk_stack_set_visible_child_name(GTK_STACK(stack1), "MENU");
+    mode = MENU;
 }
                 
 void on_btn_show_table_clicked(GtkButton *button, gpointer user_data){
@@ -626,7 +653,7 @@ void on_btn_export_profile_clicked(GtkButton *button, gpointer user_data)
     (void)user_data;
 
     AppData *app = (AppData *)user_data;
-
+    mode = EXPORT;
     if (app == NULL) return;
 }
 
@@ -710,6 +737,8 @@ void on_btn_cancel_clicked(GtkButton *button, gpointer user_data)
     (void)user_data;
 
     LOG_MSG("Export cancelled");
+    change_window(g_strdup("MANUAL"));
+    mode = MANUAL;
 }
 
 static void task_export_result_usb(GTask *task, gpointer source_object, gpointer task_data, GCancellable *cancellable) {
@@ -721,7 +750,7 @@ static void task_export_result_usb(GTask *task, gpointer source_object, gpointer
     //copy_to_usb("/mnt/usb/rapport.pdf");
     
     // Renvoyer le résultat
-    if (success) {
+    if (success == 0) {
         g_task_return_boolean(task, TRUE);
     } else {
         g_task_return_new_error(task, G_IO_ERROR, G_IO_ERROR_FAILED, "Erreur d'écriture USB");
@@ -735,9 +764,11 @@ static void on_export_finished(GObject *source_object, GAsyncResult *res, gpoint
     
     if (success) {
         hmi_log_append("Export PDF et copie USB réussis !");
+        gtk_widget_set_sensitive(btn_eject_usb, TRUE);
         // Optionnel : cacher un spinner de chargement sur l'UI
     } else {
         hmi_log_append("Échec de l'export : vérifiez la clé USB.");
+        gtk_widget_set_sensitive(btn_eject_usb, FALSE);
         g_error_free(error);
     }
 
@@ -762,6 +793,7 @@ void on_btn_export_usb_clicked(GtkButton *button, gpointer user_data) {
     hmi_log_append("Début de la génération PDF et de la copie USB...");
     // Optionnel : Afficher un spinner ou griser le bouton
     gtk_widget_set_sensitive(btn_export_usb, FALSE);
+    gtk_widget_set_sensitive(btn_eject_usb, FALSE);
 
     // Lancer la tâche en arrière-plan
     GTask *task = g_task_new(NULL, NULL, on_export_finished, app);
@@ -775,7 +807,21 @@ void on_btn_eject_usb_clicked(GtkButton *button, gpointer user_data)
     (void)button;
     (void)user_data;
 
-    LOG_MSG("Ejecting USB drive");
+    gtk_widget_set_sensitive(GTK_WIDGET(button), FALSE);
+
+    sync();
+
+    int ret = system("umount /media/usb");
+
+    if (ret == 0) {
+        LOG_MSG("[USB] Clé démontée avec succès.");
+        hmi_log_append("La clé USB a été démontée.");
+        hmi_log_append("Vous pouvez retirer la clé en toute sécurité.");
+    } else {
+        LOG_MSG("[USB] Erreur : Impossible de démonter. Un fichier est-il encore ouvert ?");
+        hmi_log_append("Erreur : Impossible de démonter la clé USB.");
+    }
+    
 }
 
 gboolean on_entry_asset_button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data) {
@@ -830,8 +876,8 @@ gboolean on_key_enter_clicked(GtkWidget *widget, GdkEventButton *event, gpointer
 
 int hmi_init(int *argc, char ***argv, AppData *app)
 {
-    GtkBuilder *builder;
     GtkWidget  *window;
+    GtkBuilder *builder;
 
     gtk_init(argc, argv);
 
@@ -850,6 +896,7 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     stack1 = GTK_WIDGET(gtk_builder_get_object(builder, "stack1"));
     txtView_menu = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_menu"));
     txtView_manual_log = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_manual_log"));
+    txtView_export       = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_export"));
 
     /* Labels status/temp/MRTD */
     label_differential_temp = GTK_WIDGET(gtk_builder_get_object(builder, "label_differential_temp"));
@@ -883,7 +930,6 @@ int hmi_init(int *argc, char ***argv, AppData *app)
     btn_eject_usb        = GTK_WIDGET(gtk_builder_get_object(builder, "btn_eject_usb"));
     btn_export_usb       = GTK_WIDGET(gtk_builder_get_object(builder, "btn_export_usb"));       
     entry_asset          = GTK_WIDGET(gtk_builder_get_object(builder, "entry_asset"));
-    txtView_export       = GTK_WIDGET(gtk_builder_get_object(builder, "txtView_export"));
     GtkWidget *grid_keyboard = GTK_WIDGET(gtk_builder_get_object(builder, "grid_keyboard"));
 
 
