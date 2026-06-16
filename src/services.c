@@ -86,7 +86,7 @@ void mrtd_cmd_queu(AppData *app, MrtdCmd cmd)
 
 /*
     *Thread qui gere toutes interactions avec l'hardware via GPIB. Travaille de pair avec le thread de watchdog pour la gestion des erreurs et la logique de l'application. 
-     - En IDLE, il attend une commande du watchdog pour se connecter ou faire du polling.
+     - En IDLE, il attend une commande pour se connecter ou faire du polling.
      - En CONNECT, il tente de se connecter au SR80 et repasse en IDLE.
      - En COMMUNICATION, il réalise le polling tant que l'appareil est en ligne, sinon repasse en IDLE.
      - En SHUTDOWN, il ferme proprement la connexion GPIB et termine le thread.
