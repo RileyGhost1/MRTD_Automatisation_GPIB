@@ -55,7 +55,8 @@ make
 sudo make install
 
 -Partie user-
-cd ~/driver/linux-gpib/linux-gpib-user
+cd linux-gpib/linux-gpib-user
+./configure 
 make
 sudo make install
 sudo ldconfig
