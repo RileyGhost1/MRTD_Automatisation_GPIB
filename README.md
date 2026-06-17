@@ -72,16 +72,17 @@ Executer la commande
 
 il faut par défaut éxécuter cette commande à chaque lancement. (fix: ajouter dans init service)
 
-## Installation serveur graphique X11 & gtk3
+## Installation serveur graphique X11
 
 sudo apt update
 sudo apt install --no-install-recommends xserver-xorg x11-xserver-utils xinit
-sudo apt install libgtk-3-dev
 sudo apt install openbox
 
 ## Installation de dépendances pour générer le rapport
 
 sudo apt update
+sudo apt install libgtk-3-dev
+sudo apt install libcjson-dev
 sudo apt install libharu
 sudo apt install gnuplot
 sudo apt install matchbox-keyboard
